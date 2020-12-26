@@ -1,0 +1,39 @@
+.App {
+  text-align: center;
+}
+
+.App-logo {
+  height: 40vmin;
+  pointer-events: none;
+}
+
+.App-header {
+  --brick-tiling-size: medium;
+  --brick-tiling-color-horizontal: chocolate;
+  --brick-tiling-color-vertical: sandybrown;
+  --brick-tiling-stroke-width: 1;
+  --brick-tiling-stroke-color: black;
+  --brick-tiling-rotation-ratio: 0.5;
+  --brick-tiling-visual-defects: false;
+  background: paint(brick-tiling), #735cdd;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  font-size: calc(10px + 2vmin);
+  color: white;
+}
+
+.App-link {
+  color: #61dafb;
+}
+
+@keyframes App-logo-spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
