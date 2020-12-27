@@ -39,7 +39,7 @@ registerPaint('hexagonal-tiling', class StaticGradient {
         large:  60,
       }
   
-      let [
+      const [
         sizePx = 40,
         sideLength = 10,
         fillScreen = 'enabled', 
@@ -51,12 +51,14 @@ registerPaint('hexagonal-tiling', class StaticGradient {
         flatSurfacesRatio = 0.7
       ] = this.parseProps(props)
   
-      sizePx = isNaN(parseInt(sizePx))
+      const sizePxInt = isNaN(parseInt(sizePx))
         ? sizekeys[sizePx]
         : parseInt(sizePx)
     
-      const cubes = createLayout({sizePx, sideLength, height, width, fillScreen
-        }).map((geo) => { return { cube: createCube(sideLength, flatSurfacesRatio), geo }})
+      const sideLengthInt = parseInt(sideLength)
+      
+      const cubes = createLayout({sizePx: sizePxInt, sideLength: sideLengthInt, height, width, fillScreen
+        }).map((geo) => { return { cube: createCube(sideLengthInt, flatSurfacesRatio), geo }})
 
       cubes.forEach(({cube, geo}) => {[
         {type: 'bottom', color: color1},
