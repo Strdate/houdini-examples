@@ -1,3 +1,19 @@
+*, *::before, *::after {
+  box-sizing: inherit;
+}
+
+html {
+  /* this makes sure the padding and the border is included in the box sizing */
+  box-sizing: border-box;
+  overflow-y: hidden;
+}
+
+html body {
+  padding: 0;
+  margin: 0;
+  overflow-y: inherit;
+}
+
 .App {
   text-align: center;
 }
@@ -7,6 +23,11 @@
   pointer-events: none;
 }
 
+.Hexagon-header {
+  overflow: hidden;
+}
+
+
 .App-header {
   --brick-tiling-size: medium;
   --brick-tiling-color-horizontal: chocolate;
@@ -15,7 +36,7 @@
   --brick-tiling-stroke-color: black;
   --brick-tiling-rotation-ratio: 0.5;
   --brick-tiling-visual-defects: false;
-  background: paint(brick-tiling), #735cdd;
+  background: paint(brick-tiling), sandybrown;
   min-height: 100vh;
   display: flex;
   flex-direction: column;
