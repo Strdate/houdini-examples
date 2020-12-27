@@ -1,6 +1,7 @@
 //import logo from './logo.svg';
 import './App.css';
-import workletURL from 'worklet-loader!./worklets/brickTiling.js';
+//import workletURL from 'worklet-loader!./worklets/brickTiling.js';
+import workletURL from 'worklet-loader!./worklets/hexagonalTiling.js';
 import React from 'react';
 import { Route, BrowserRouter as Router } from 'react-router-dom';
 import Hexagons from './hexagons';

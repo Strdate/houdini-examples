@@ -36,7 +36,16 @@ html body {
   --brick-tiling-stroke-color: black;
   --brick-tiling-rotation-ratio: 0.5;
   --brick-tiling-visual-defects: false;
-  background: paint(brick-tiling), sandybrown;
+  --hexagonal-tiling-size: medium;
+  --hexagonal-tiling-side-length: 10;
+  --hexagonal-tiling-fill-screen: enabled;
+  --hexagonal-tiling-color-1: chocolate;
+  --hexagonal-tiling-color-2: sandybrown;
+  --hexagonal-tiling-color-3: grey;
+  --hexagonal-tiling-stroke-width: 1;
+  --hexagonal-tiling-stroke-color: black;
+  --hexagonal-tiling-flat-surfaces-ratio: 0.7;
+  background: paint(hexagonal-tiling), sandybrown;
   min-height: 100vh;
   display: flex;
   flex-direction: column;
