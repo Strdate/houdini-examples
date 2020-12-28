@@ -63,8 +63,26 @@ function HexagonCanvas(props) {
   );
 }
 
+function canvasClick(meta, clientX, clientY, action) {
+  const clickX = clientX - meta.geo.offsetX - meta.geo.w / 2
+  const clickY = clientY - meta.geo.offsetY
+
+  const coordXY = 2 * (clickX * meta.size.y) / meta.geo.w
+  const coordZ = 2 * meta.size.z - 2 * ((clickY + (1 / Math.sqrt(3)) * clickX) * meta.size.z) / meta.geo.h
+  const lightRayOut = lightRay(meta,coordXY,coordZ)
+  console.log(lightRayOut)
+  if(lightRayOut) {
+    if(action === 'build') {
+      buildVoxel(meta, lightRayOut.point, lightRayOut.face)
+    } else if(action === 'remove') {
+      removeVoxel(meta, lightRayOut.point)
+    }
+  }
+}
+
 function lightRay(meta, coordXY, coordZ) {
-  const triangle = Math.abs(coordXY % 1) + Math.abs(coordZ % 1) > 1 ? 1 : 0
+  const triangle = mod(coordXY, 1) + mod(coordZ, 1) > 1 ? 1 : 0
+  console.log(coordXY, coordZ, triangle)
 
   let z = Math.floor(coordZ)
   let x = Math.floor(coordXY) //+ Math.min(0,z - meta.size.z)
@@ -86,23 +104,6 @@ function lightRay(meta, coordXY, coordZ) {
     x++
     y++
     z--
-  }
-}
-
-function canvasClick(meta, clientX, clientY, action) {
-  const clickX = clientX - meta.geo.offsetX - meta.geo.w / 2
-  const clickY = clientY - meta.geo.offsetY
-
-  const coordXY = 2 * (clickX * meta.size.y) / meta.geo.w
-  const coordZ = 2 * meta.size.z - 2 * ((clickY + (1 / Math.sqrt(3)) * clickX) * meta.size.z) / meta.geo.h
-  const lightRayOut = lightRay(meta,coordXY,coordZ)
-  console.log(lightRayOut)
-  if(lightRayOut) {
-    if(action === 'build') {
-      buildVoxel(meta, lightRayOut.point, lightRayOut.face)
-    } else if(action === 'remove') {
-      removeVoxel(meta, lightRayOut.point)
-    }
   }
 }
 
@@ -250,6 +251,10 @@ function drawRhombus(coords, face, meta) {
   ctx.fillStyle = meta.colorFor(face)
   ctx.fill()
   ctx.stroke();
+}
+
+function mod(num,n) {
+  return ((num%n)+n)%n
 }
  
 export default HexagonCanvas;
