@@ -4,7 +4,7 @@ import React, { useRef, useEffect } from 'react';
 function HexagonCanvas(props) {
   const canvas = useRef();
 
-  const sizePx = 40
+  const sizePx = 80
   const size = {
     x: 10,
     y: 10,
@@ -44,7 +44,15 @@ function HexagonCanvas(props) {
  
     // get context of the canvas
     meta.ctx = canvasEle.getContext("2d");
-  }, []);
+
+    canvasEle.addEventListener('click', function(evt) {
+      canvasClick(meta, evt.clientX, evt.clientY,'build')
+    })
+    canvasEle.addEventListener('contextmenu', function(evt) {
+      evt.preventDefault()
+      canvasClick(meta, evt.clientX, evt.clientY,'remove')
+    })
+  });
 
   useEffect(() => {
     renderCube(meta)
@@ -55,8 +63,75 @@ function HexagonCanvas(props) {
   );
 }
 
+function lightRay(meta, coordXY, coordZ) {
+  const triangle = Math.abs(coordXY % 1) + Math.abs(coordZ % 1) > 1 ? 1 : 0
+
+  let z = Math.floor(coordZ)
+  let x = Math.floor(coordXY) //+ Math.min(0,z - meta.size.z)
+  let y = 0//Math.min(0,z - meta.size.z)
+  //z = Math.min(meta.size.z, z)
+
+  while(meta.size.z >= 0 && x < meta.size.x && y < meta.size.y) {
+    if(meta.buffer.at({x, y, z})) {
+      return {point: {x, y, z}, face: 'right'}
+    } else if(triangle && meta.buffer.at({x: x + 1, y, z})) {
+      return {point: {x: x+1, y, z}, face: 'left'}
+    } else if(triangle && meta.buffer.at({x: x + 1, y, z: z - 1})) {
+      return {point: {x: x + 1, y, z: z - 1}, face: 'bottom'}
+    } else if(!triangle && meta.buffer.at({x, y, z: z - 1})) {
+      return {point: {x, y, z: z - 1}, face: 'bottom'}
+    } else if(!triangle && meta.buffer.at({x: x + 1, y, z: z - 1})) {
+      return {point: {x: x + 1, y, z: z - 1}, face: 'left'}
+    }
+    x++
+    y++
+    z--
+  }
+}
+
+function canvasClick(meta, clientX, clientY, action) {
+  const clickX = clientX - meta.geo.offsetX - meta.geo.w / 2
+  const clickY = clientY - meta.geo.offsetY
+
+  const coordXY = 2 * (clickX * meta.size.y) / meta.geo.w
+  const coordZ = 2 * meta.size.z - 2 * ((clickY + (1 / Math.sqrt(3)) * clickX) * meta.size.z) / meta.geo.h
+  const lightRayOut = lightRay(meta,coordXY,coordZ)
+  console.log(lightRayOut)
+  if(lightRayOut) {
+    if(action === 'build') {
+      buildVoxel(meta, lightRayOut.point, lightRayOut.face)
+    } else if(action === 'remove') {
+      removeVoxel(meta, lightRayOut.point)
+    }
+  }
+}
+
+function buildVoxel(meta, coords, face) {
+  switch(face) {
+    case 'right': coords = {x: coords.x, y: coords.y - 1, z: coords.z}
+      break
+    case 'left': coords = {x: coords.x - 1, y: coords.y, z: coords.z}
+      break
+    case 'bottom': coords = {x: coords.x, y: coords.y, z: coords.z + 1}
+      break
+    default: throw new Error('Unknown face')
+  }
+  if(meta.buffer.isInBounds(coords)) {
+    meta.buffer.set(coords, 1)
+    renderCube(meta)
+  }
+}
+
+function removeVoxel(meta, coords) {
+  if(meta.buffer.isInBounds(coords)) {
+    meta.buffer.set(coords, 0)
+    renderCube(meta)
+  }
+}
+
 function renderCube(meta) {
-  console.log('render cube',meta)
+  //console.log('render cube',meta)
+  meta.ctx.clearRect(0, 0, 2 * meta.geo.w, 2 * meta.geo.h)
   for(let i = meta.size.x + meta.size.y + meta.size.z; i >= 0; i--) {
     sameDistance(i,meta.size).forEach(point => {
       point = {x: point.x, y: point.y, z: meta.size.z - point.z - 1}
@@ -99,7 +174,7 @@ function createLayout({sizePx, size, height, width}) {
       h: hexHeight,
       w: hexWidth,
       offsetX: offsetX,
-      offestY: offsetY,
+      offsetY: offsetY,
     })
   }
   const geos = []
@@ -115,8 +190,8 @@ function createCube(size) {
 
   for(let i = 0; i < size.x; i++) {
     for(let j = 0; j < size.y; j++) {
-      for(let k = 0; k < size.x; k++) {
-        cube.set({x: i,y: j,z: k}, k % 2 === 0 ? 1 : 0)
+      for(let k = 0; k < size.z; k++) {
+        cube.set({x: i,y: j,z: k}, k === 19 && i+j === 0 ? 0 : 1)
       }
     }
   }
@@ -149,7 +224,7 @@ function drawRhombus(coords, face, meta) {
   if(coords.x === null || coords.y === null || coords.z === null)
     return
   const startX = geo.offsetX + geo.w / 2 + (coords.x - coords.y) * geo.i / 2
-  const startY = geo.offestY + geo.h - (coords.x + coords.y + 2 * coords.z) * geo.j / 2
+  const startY = geo.offsetY + geo.h - (coords.x + coords.y + 2 * coords.z) * geo.j / 2
   ctx.beginPath()
   ctx.moveTo( startX, startY )
   //ctx.lineTo = (x, y) => console.log(x, y)
@@ -170,7 +245,7 @@ function drawRhombus(coords, face, meta) {
     ctx.lineTo( startX, startY - geo.j )
   }
   ctx.lineTo( startX, startY )
-  ctx.strokeStyle = 'black'
+  ctx.strokeStyle = 'black' //meta.colorFor(face)
   ctx.lineWidth = 1
   ctx.fillStyle = meta.colorFor(face)
   ctx.fill()
