@@ -14,7 +14,7 @@ class CubeMemory
 
     set({x, y, z}, val) {
         if(!this.isInBounds({x, y, z}))
-            throw new Error('Out of bounds')
+            throw new Error('Coord ' + x + ', ' + y + ', ' + z + ' is out of bounds')
         this.buffer[x * this.size.y * this.size.z + y * this.size.z + z] = val
     }
 

@@ -1,10 +1,11 @@
 import CubeMemory from './cubeMemory'
 import React, { useRef, useEffect } from 'react';
+import generateColor from './utils/generateGradient';
  
 function HexagonCanvas(props) {
   const canvas = useRef();
 
-  const sizePx = 80
+  const sizePx = 60
   const size = {
     x: 10,
     y: 10,
@@ -22,16 +23,16 @@ function HexagonCanvas(props) {
     size,
     buffer,
     geo,
-    colorFor: function(face) {
-      switch(face) {
-        case 'right': return 'chocolate'
-          //break
-        case 'left': return 'sandybrown'
-          //break
-        case 'bottom': return 'tan'
-          //break
-        default: return 'grey'
-      }
+    colorSpaces: {
+      /*right: 'chocolate', //generateColor('#C85A17','#893e10',size.x),
+      left: 'sandybrown', //generateColor('sandybrown','sandybrown',size.y),
+      bottom: 'tan' //generateColor('tan','tan',size.z)*/
+      right: generateColor('#e67733','#925f3f',size.x).reverse(),
+      left: generateColor('#E77471','#710515',size.y).reverse(),
+      bottom: generateColor('#fdea9b','#f2c202',size.z)
+    },
+    getColor: function(face, coord) {
+      return '#' + this.colorSpaces[face][coord]
     }
   }
 
@@ -130,43 +131,6 @@ function removeVoxel(meta, coords) {
   }
 }
 
-function renderCube(meta) {
-  //console.log('render cube',meta)
-  meta.ctx.clearRect(0, 0, 2 * meta.geo.w, 2 * meta.geo.h)
-  for(let i = meta.size.x + meta.size.y + meta.size.z; i >= 0; i--) {
-    sameDistance(i,meta.size).forEach(point => {
-      point = {x: point.x, y: point.y, z: meta.size.z - point.z - 1}
-      const val = meta.buffer.at(point)
-      if(val) {
-        if(!meta.buffer.at({x: point.x - 1, y: point.y, z: point.z})) {
-          drawRhombus(point, 'left', meta)
-        }
-        if(!meta.buffer.at({x: point.x, y: point.y - 1, z: point.z})) {
-          drawRhombus(point, 'right', meta)
-        }
-        if(!meta.buffer.at({x: point.x, y: point.y, z: point.z + 1})) {
-          drawRhombus({x: point.x, y: point.y,z: point.z + 1}, 'bottom', meta)
-        }
-      }
-    });
-  }
-}
-
-function sameDistance(target, size) {
-  const array = []
-  for(let i = size.x - 1; i >= 0; i--) {
-    for(let j = size.y - 1; j >= 0; j--) {
-      for(let k = size.z - 1; k >= 0; k--) {
-        if(i + j + k === target) {
-          array.push({x: i, y: j, z: k})
-          break
-        }
-      }
-    }
-  }
-  return array
-}
-
 function createLayout({sizePx, size, height, width}) {
   function createGeo(offsetX, offsetY) {
     geos.push({
@@ -189,13 +153,29 @@ function createLayout({sizePx, size, height, width}) {
 function createCube(size) {
   const cube = new CubeMemory(size)
 
-  for(let i = 0; i < size.x; i++) {
+  /*for(let i = 0; i < size.x; i++) {
     for(let j = 0; j < size.y; j++) {
       for(let k = 0; k < size.z; k++) {
         cube.set({x: i,y: j,z: k}, k === 19 && i+j === 0 ? 0 : 1)
       }
     }
-  }
+  }*/
+
+  for(let x = size.x - 1; x >= 0; x--)
+    {
+        for(let y = size.y - 1; y >= 0; y--)
+        {
+            const factor = (x + y) / (size.x + size.y) // Columns further away from POV are higher
+            const rand = Math.round((Math.random() + factor) * size.z)
+            for(let z = 0; z <= Math.min(rand,size.z - 1); z++) {
+              if((cube.at({x: x+ 1,y,z}) ?? true) && (cube.at({x,y: y+1,z}) ?? true)) {
+                cube.set({x, y, z}, 1)
+              } else {
+                break
+              }
+            }
+        }
+    }
 
   /*cube.heightMap = [
       [0, 2, 2, 4, 4, 5, 5, 5, 5, 5],
@@ -220,7 +200,44 @@ function createCube(size) {
   return cube
 }
 
-function drawRhombus(coords, face, meta) {
+function renderCube(meta) {
+  //console.log('render cube',meta)
+  meta.ctx.clearRect(0, 0, 2 * meta.geo.w, 2 * meta.geo.h)
+  for(let i = meta.size.x + meta.size.y + meta.size.z; i >= 0; i--) {
+    sameDistance(i,meta.size).forEach(point => {
+      point = {x: point.x, y: point.y, z: meta.size.z - point.z - 1}
+      const val = meta.buffer.at(point)
+      if(val) {
+        if(!meta.buffer.at({x: point.x - 1, y: point.y, z: point.z})) {
+          drawRhombus(point, 'left', meta.getColor('left',point.x), meta)
+        }
+        if(!meta.buffer.at({x: point.x, y: point.y - 1, z: point.z})) {
+          drawRhombus(point, 'right', meta.getColor('right',point.y), meta)
+        }
+        if(!meta.buffer.at({x: point.x, y: point.y, z: point.z + 1})) {
+          drawRhombus({x: point.x, y: point.y,z: point.z + 1}, 'bottom', meta.getColor('bottom',point.z), meta)
+        }
+      }
+    });
+  }
+}
+
+function sameDistance(target, size) {
+  const array = []
+  for(let i = size.x - 1; i >= 0; i--) {
+    for(let j = size.y - 1; j >= 0; j--) {
+      for(let k = size.z - 1; k >= 0; k--) {
+        if(i + j + k === target) {
+          array.push({x: i, y: j, z: k})
+          break
+        }
+      }
+    }
+  }
+  return array
+}
+
+function drawRhombus(coords, face, color, meta) {
   const {ctx, geo} = meta
   if(coords.x === null || coords.y === null || coords.z === null)
     return
@@ -246,9 +263,9 @@ function drawRhombus(coords, face, meta) {
     ctx.lineTo( startX, startY - geo.j )
   }
   ctx.lineTo( startX, startY )
-  ctx.strokeStyle = 'black' //meta.colorFor(face)
+  ctx.strokeStyle = 'black'//color
   ctx.lineWidth = 1
-  ctx.fillStyle = meta.colorFor(face)
+  ctx.fillStyle = color
   ctx.fill()
   ctx.stroke();
 }
