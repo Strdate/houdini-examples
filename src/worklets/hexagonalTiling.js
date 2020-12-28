@@ -46,7 +46,7 @@ registerPaint('hexagonal-tiling', class StaticGradient {
         color1 = 'tan',
         color2 = 'chocolate',
         color3 = 'sandybrown', 
-        strokeWidth = 1,
+        strokeWidth = 0,
         strokeColor = 'black',
         flatSurfacesRatio = 0.7
       ] = this.parseProps(props)
@@ -232,7 +232,6 @@ registerPaint('hexagonal-tiling', class StaticGradient {
   }
   
   function drawRhombus({ctx, coords, geo, face, style}) {
-    console.log(coords)
     const startX = geo.offsetX + geo.w / 2 + (coords.x - coords.y) * geo.i / 2
     const startY = geo.offestY + geo.h - (coords.x + coords.y + 2 * coords.z) * geo.j / 2
     ctx.beginPath()
@@ -258,8 +257,9 @@ registerPaint('hexagonal-tiling', class StaticGradient {
     ctx.lineWidth = style.strokeWidth
     ctx.fillStyle = face.color
     ctx.fill()
-    if(style.strokeWidth > 0)
+    if(style.strokeWidth == 0)
     {
-      ctx.stroke();
+      ctx.strokeStyle = face.color
     }
+    ctx.stroke();
   }

@@ -1,16 +1,39 @@
+import CubeMemory from './cubeMemory'
 import React, { useRef, useEffect } from 'react';
  
 function HexagonCanvas(props) {
   const canvas = useRef();
-  let ctx = null;
 
   const sizePx = 40
-  const size = 15
+  const size = {
+    x: 10,
+    y: 10,
+    z: 10
+  }
 
   const height = window.innerHeight
   const width = window.innerWidth
 
-  const cubes = createLayout({sizePx, size, height, width}).map((geo) => { return { cube: createCube(size), geo }})
+  //const cubes = createLayout({sizePx, size, height, width}).map((geo) => { return { cube: createCube(size), geo }})
+  const geo = createLayout({sizePx, size, height, width})[0]
+  const buffer = createCube(size)
+  console.log(buffer)
+  const meta = {
+    size,
+    buffer,
+    geo,
+    colorFor: function(face) {
+      switch(face) {
+        case 'right': return 'chocolate'
+          //break
+        case 'left': return 'sandybrown'
+          //break
+        case 'bottom': return 'tan'
+          //break
+        default: return 'grey'
+      }
+    }
+  }
 
   // initialize the canvas context
   useEffect(() => {
@@ -20,143 +43,93 @@ function HexagonCanvas(props) {
     canvasEle.height = height;
  
     // get context of the canvas
-    ctx = canvasEle.getContext("2d");
+    meta.ctx = canvasEle.getContext("2d");
   }, []);
 
   useEffect(() => {
-    cubes.forEach(({cube, geo}) => {[
-      {type: 'bottom', color: 'tan'},
-      {type: 'right', color: 'chocolate'},
-      {type: 'left', color: 'sandybrown'}
-      /*{type: 'bottom', color: '#ffff55'},
-      {type: 'right', color: '#ff5555'},
-      {type: 'left', color: '#808080'}*/
-    ].forEach((face) => {
-      for(let i = 0; i < cube.size; i++)
-      {
-        for(let j = 0; j < cube.size; j++)
-        {
-          drawRhombus({
-            ctx,
-            coords: {
-              x: face.type === 'left' ? cube.getDepth(face.type, i, j) : i,
-              y: face.type === 'right' ? cube.getDepth(face.type, i, j) : (face.type === 'bottom' ? j : i),
-              z: face.type === 'bottom' ? cube.getDepth(face.type, i, j) : j
-            },
-            geo,
-            face
-          })
-        }
-      }
-    })
-  })});
+    renderCube(meta)
+  });
  
   return (
       <canvas ref={canvas}></canvas>
   );
 }
 
-function createLayout({sizePx, size, height, width}) {
-  function isVisible(hex) {
-    return (hex.x < width && hex.x + hexWidth > 0 && hex.y < height && hex.y + hexHeight > 0)
+function renderCube(meta) {
+  console.log('render cube',meta)
+  for(let i = meta.size.x + meta.size.y + meta.size.z; i >= 0; i--) {
+    sameDistance(i,meta.size).forEach(point => {
+      point = {x: point.x, y: point.y, z: meta.size.z - point.z - 1}
+      const val = meta.buffer.at(point)
+      if(val) {
+        if(!meta.buffer.at({x: point.x - 1, y: point.y, z: point.z})) {
+          drawRhombus(point, 'left', meta)
+        }
+        if(!meta.buffer.at({x: point.x, y: point.y - 1, z: point.z})) {
+          drawRhombus(point, 'right', meta)
+        }
+        if(!meta.buffer.at({x: point.x, y: point.y, z: point.z + 1})) {
+          drawRhombus({x: point.x, y: point.y,z: point.z + 1}, 'bottom', meta)
+        }
+      }
+    });
   }
+}
 
+function sameDistance(target, size) {
+  const array = []
+  for(let i = size.x - 1; i >= 0; i--) {
+    for(let j = size.y - 1; j >= 0; j--) {
+      for(let k = size.z - 1; k >= 0; k--) {
+        if(i + j + k === target) {
+          array.push({x: i, y: j, z: k})
+          break
+        }
+      }
+    }
+  }
+  return array
+}
+
+function createLayout({sizePx, size, height, width}) {
   function createGeo(offsetX, offsetY) {
     geos.push({
-      i: hexWidth / size,
-      j: hexHeight / (2 * size),
+      i: hexWidth / size.x,
+      j: hexHeight / (2 * size.x),
       h: hexHeight,
       w: hexWidth,
       offsetX: offsetX,
       offestY: offsetY,
     })
   }
-
-  function getHexagonsInRow(startHex, sign = 1) {
-    let j = sign === 1 ? 1 : 0
-    while(true) {
-      const newHex = {x: startHex.x + j * hexWidth, y: startHex.y}
-      if(isVisible(newHex))
-      {
-        createGeo(newHex.x, newHex.y)
-      }
-      else
-      {
-        return Math.abs(j) > 0 ? true : false
-      }
-      j = j + 1 * sign
-    }
-  }
-
-  function loopRows(defPointX, defPointY, sign = 1) {
-    let i = sign === 1 ? 0 : 1
-    let generating = true
-    while(generating) {
-      if(i % 2 === 0)
-      {
-        const lastHex = {x: defPointX, y: defPointY + i * (hexHeight) * 3 / 4 * sign}
-        generating = getHexagonsInRow(lastHex, 1) && getHexagonsInRow(lastHex, -1)
-      } else {
-        const lastHex = {x: defPointX - hexWidth / 2, y: defPointY + 3 / 4 * (hexHeight) * sign + (i - 1) * (hexHeight) * 3 / 4 * sign}
-        generating = getHexagonsInRow(lastHex, 1) && getHexagonsInRow(lastHex, -1)
-      }
-      i++
-    }
-  }
-
   const geos = []
-  const hexHeight = size * sizePx
+  
+  const hexHeight = size.x * sizePx
   const hexWidth = hexHeight * Math.sqrt(3) / 2
-
-  const offsetX = (width - hexWidth) / 2
-  const offsetY = (height - hexHeight) / 2
-  loopRows(offsetX, offsetY)
-  loopRows(offsetX, offsetY, -1)
-
-  console.log(geos)
+  createGeo((width - hexWidth) / 2,(height - hexHeight) / 2)
   return geos
 }
 
 function createCube(size) {
-  const cube = {
-      heightMap: [],
-      handles: [],
-      size,
-      getDepth: function(face, a, b) {
-          if(face === 'bottom') {
-              return this.heightMap[a][b]
-          } else if(face === 'right')
-          {
-              for(let i = 0; i < size; i++)
-              {
-                  if(cube.heightMap[a][i] > b)
-                  {
-                      return i
-                  }
-              }
-          } else if(face === 'left')
-          {
-              for(let i = 0; i < size; i++)
-              {
-                  if(cube.heightMap[i][a] > b)
-                  {
-                      return i
-                  }
-              }
-          }
-          return size//null
+  const cube = new CubeMemory(size)
+
+  for(let i = 0; i < size.x; i++) {
+    for(let j = 0; j < size.y; j++) {
+      for(let k = 0; k < size.x; k++) {
+        cube.set({x: i,y: j,z: k}, k % 2 === 0 ? 1 : 0)
       }
+    }
   }
 
   /*cube.heightMap = [
       [0, 2, 2, 4, 4, 5, 5, 5, 5, 5],
       [1, 3, 3, 4, 4, 5, 5, 5, 5, 5],
-      [1, 4, 4, 4, 4, 5, 5, 5, 5, 5],
+      [1, 4, 4, 4, 4, 5, 5, 3, 5, 5],
       [3, 4, 4, 5, 5, 5, 5, 5, 5, 5],
-      [3, 4, 5, 5, 5, 5, 5, 5, 5, 5],
+      [3, 4, 5, 5, 6, 5, 5, 5, 5, 5],
       [3, 4, 5, 5, 5, 5, 5, 5, 5, 5],
       [3, 4, 5, 5, 5, 5, 5, 5, 5, 6],
-      [3, 4, 5, 5, 5, 5, 5, 5, 5, 7],
+      [8, 4, 5, 5, 5, 5, 5, 5, 5, 7],
       [3, 4, 5, 5, 5, 5, 5, 5, 5, 8],
       [3, 4, 5, 5, 5, 5, 5, 5, 5, 9],
   ]*/
@@ -168,72 +141,29 @@ function createCube(size) {
       [3, 4, 4, 5, 5],
       [3, 4, 5, 5, 5],
   ]*/
-  const flat = Math.random() > 0.33
-
-  for(let x = size - 1; x >= 0; x--)
-  {
-      cube.heightMap[x] = []
-      for(let y = size - 1; y >= 0; y--)
-      {
-          if(!flat)
-          {
-            cube.heightMap[x][y] = Math.floor((x + y) / 2)
-          }
-          else
-          {
-            const factor = (x + y) / (2 * size)
-            const rand = Math.round((Math.random() + factor) * size)
-            cube.heightMap[x][y] = Math.min(rand, cube.heightMap?.[x+1]?.[y] ?? size, cube.heightMap[x][y+1] ?? size)
-          }
-      }
-  }
-
-  if(!flat)
-  {
-    const interations = Math.min(100_000, size * size * Math.random() * 1000)
-    for(let i = 0; i < interations; i++)
-    {
-        const x = Math.floor((Math.random()) * size)
-        const y = Math.floor((Math.random()) * size)
-        const val = cube.heightMap[x][y]
-        if(Math.random() > 0.5)
-        {
-            if(val < size && (cube.heightMap?.[x+1]?.[y] ?? size) > val && (cube.heightMap?.[x]?.[y+1] ?? size) > val)
-            {
-                cube.heightMap[x][y]++
-            }
-        } else {
-            if(val > 0 && (cube.heightMap?.[x-1]?.[y] ?? 0) < val && (cube.heightMap?.[x]?.[y-1] ?? 0) < val)
-            {
-                cube.heightMap[x][y]--
-            }
-        }
-    }
-  }
-
   return cube
 }
 
-function drawRhombus({ctx, coords, geo, face}) {
-  //console.log(coords,face)
-  //if(coords.x === null || coords.y === null || coords.z === null)
-  //  return
+function drawRhombus(coords, face, meta) {
+  const {ctx, geo} = meta
+  if(coords.x === null || coords.y === null || coords.z === null)
+    return
   const startX = geo.offsetX + geo.w / 2 + (coords.x - coords.y) * geo.i / 2
   const startY = geo.offestY + geo.h - (coords.x + coords.y + 2 * coords.z) * geo.j / 2
   ctx.beginPath()
   ctx.moveTo( startX, startY )
   //ctx.lineTo = (x, y) => console.log(x, y)
-  if(face.type === 'bottom') // bottom face
+  if(face === 'bottom') // bottom face
   {
     ctx.lineTo( startX + geo.i / 2, startY - geo.j / 2 )
     ctx.lineTo( startX, startY - geo.j )
     ctx.lineTo( startX - geo.i / 2, startY - geo.j / 2 )
-  } else if(face.type === 'right') // right face
+  } else if(face === 'right') // right face
   {
     ctx.lineTo( startX + geo.i / 2, startY - geo.j / 2 )
     ctx.lineTo( startX + geo.i / 2, startY - 3 * geo.j / 2 )
     ctx.lineTo( startX, startY - geo.j )
-  } else if (face.type === 'left') // left face
+  } else if (face === 'left') // left face
   {
     ctx.lineTo( startX - geo.i / 2, startY - geo.j / 2 )
     ctx.lineTo( startX - geo.i / 2, startY - 3 * geo.j / 2 )
@@ -242,7 +172,7 @@ function drawRhombus({ctx, coords, geo, face}) {
   ctx.lineTo( startX, startY )
   ctx.strokeStyle = 'black'
   ctx.lineWidth = 1
-  ctx.fillStyle = face.color
+  ctx.fillStyle = meta.colorFor(face)
   ctx.fill()
   ctx.stroke();
 }
