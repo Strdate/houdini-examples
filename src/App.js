@@ -1,13 +1,15 @@
 //import logo from './logo.svg';
 import './App.css';
 //import workletURL from 'worklet-loader!./worklets/brickTiling.js';
-import workletURL from 'worklet-loader!./worklets/hexagonalTiling.js';
+import hexagonalTilingURL from 'worklet-loader!./worklets/hexagonalTiling.js';
+import brickTilingURL from 'worklet-loader!./worklets/brickTiling.js';
 import React from 'react';
 import { Route, BrowserRouter as Router } from 'react-router-dom';
 import Hexagons from './hexagons';
 //import workletURL from 'file-loader!houdini-static-gradient';
 
-CSS.paintWorklet.addModule(workletURL)
+CSS.paintWorklet.addModule(hexagonalTilingURL)
+CSS.paintWorklet.addModule(brickTilingURL)
 /*CSS.paintWorklet.addModule(workletUrl).then(() => {
   console.log('Paint worklet added');
 })*/

@@ -1,19 +1,3 @@
-*, *::before, *::after {
-  box-sizing: inherit;
-}
-
-html {
-  /* this makes sure the padding and the border is included in the box sizing */
-  box-sizing: border-box;
-  overflow-y: hidden;
-}
-
-html body {
-  padding: 0;
-  margin: 0;
-  overflow-y: inherit;
-}
-
 .App {
   text-align: center;
 }
@@ -27,6 +11,31 @@ html body {
   overflow: hidden;
 }
 
+.Hexagon-header-hideBackground {
+  background: #ffffff;
+}
+
+.Hexagon-header-showBackground {
+  background: paint(brick-tiling), sandybrown;
+}
+
+.Hexagon-header {
+  --brick-tiling-size: small;
+  --brick-tiling-color-horizontal: #E3E4FA;
+  --brick-tiling-color-vertical: #E9CFEC;
+  --brick-tiling-stroke-width: 0;
+  --brick-tiling-stroke-color: black;
+  --brick-tiling-rotation-ratio: 0.5;
+  --brick-tiling-visual-defects: false;
+
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  font-size: calc(10px + 2vmin);
+  color: white;
+}
 
 .App-header {
   --brick-tiling-size: medium;
@@ -51,11 +60,64 @@ html body {
   color: #61dafb;
 }
 
-@keyframes App-logo-spin {
-  from {
-    transform: rotate(0deg);
-  }
-  to {
-    transform: rotate(360deg);
-  }
+/* The sidepanel menu */
+.sidepanel {
+  height: 600px; /* Specify a height */
+  width: 400px; /* 0 width - change this with JavaScript */
+  position: fixed; /* Stay in place */
+  z-index: 1; /* Stay on top */
+  top: 48px;
+  right: 0;
+  opacity: 0.7;
+  border-radius: 15px 0px 0px 15px;
+  background-color: #111; /* Black*/
+  overflow-x: hidden; /* Disable horizontal scroll */
+  text-align: center;
+  padding-top: 60px; /* Place content 60px from the top */
+  transition: 0.4s; /* 0.5 second transition effect to slide in the sidepanel */
+  
+}
+
+/* The sidepanel links */
+.sidepanel a {
+  padding: 8px 0px 8px 0px;
+  text-decoration: none;
+  font-size: 25px;
+  color: #f1f1f1;
+  display: block;
+  transition: 0.3s;
+}
+
+/* When you mouse over the navigation links, change their color */
+.sidepanel a:hover {
+  color: #ffffff;
+  text-shadow: 1px 1px;
+}
+
+/* Position and style the close button (top right corner) */
+.sidepanel .closebtn {
+  position: absolute;
+  top: 0;
+  right: 25px;
+  font-size: 36px;
+  margin-left: 50px;
+}
+
+/* Style the button that is used to open the sidepanel */
+.openbtn {
+  font-size: 20px;
+  position: fixed;
+  cursor: pointer;
+  background-color: #111;
+  color: white;
+  padding: 10px 15px;
+  border-radius: 5px 0px 0px 5px;
+  border: none;
+  top: 50px;
+  right: 0;
+  visibility: hidden;
+}
+
+.openbtn:hover {
+  background-color: #444;
 }

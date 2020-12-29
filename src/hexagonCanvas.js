@@ -1,9 +1,11 @@
 import CubeMemory from './cubeMemory'
-import React, { useRef, useEffect } from 'react';
+import React, { useRef, useEffect, useState } from 'react';
 import generateColor from './utils/generateGradient';
  
 function HexagonCanvas(props) {
+  console.log('renderig')
   const canvas = useRef();
+  props.biRef.generateMapClick = generateMapClick;
 
   const sizePx = 60
   const size = {
@@ -12,17 +14,23 @@ function HexagonCanvas(props) {
     z: 10
   }
 
-  const height = window.innerHeight
-  const width = window.innerWidth
+  const height = size.x * sizePx
+  const width = height * Math.sqrt(3) / 2 + 3
 
   //const cubes = createLayout({sizePx, size, height, width}).map((geo) => { return { cube: createCube(size), geo }})
   const geo = createLayout({sizePx, size, height, width})[0]
-  const buffer = createCube(size)
+
+  const [buffer, setBufferState] = useState(createCube(size))
+
   console.log(buffer)
   const meta = {
     size,
     buffer,
+    setBufferState,
     geo,
+    preferences: {
+      showOutlines: props.showOutlines
+    },
     colorSpaces: {
       /*right: 'chocolate', //generateColor('#C85A17','#893e10',size.x),
       left: 'sandybrown', //generateColor('sandybrown','sandybrown',size.y),
@@ -38,6 +46,7 @@ function HexagonCanvas(props) {
 
   // initialize the canvas context
   useEffect(() => {
+    console.log('use effect!')
     // dynamically assign the width and height to canvas
     const canvasEle = canvas.current;
     canvasEle.width = width;
@@ -45,19 +54,28 @@ function HexagonCanvas(props) {
  
     // get context of the canvas
     meta.ctx = canvasEle.getContext("2d");
+    meta.canvasEle = canvasEle
 
-    canvasEle.addEventListener('click', function(evt) {
+    const clickCallback = function(evt) {
       canvasClick(meta, evt.clientX, evt.clientY,'build')
-    })
-    canvasEle.addEventListener('contextmenu', function(evt) {
+    }
+    canvasEle.addEventListener('click', clickCallback)
+    const contextmenuCallback = function(evt) {
       evt.preventDefault()
       canvasClick(meta, evt.clientX, evt.clientY,'remove')
+    }
+    canvasEle.addEventListener('contextmenu', contextmenuCallback)
+
+    renderCube(meta)
+    return (() => {
+      canvasEle.removeEventListener('click', clickCallback)
+      canvasEle.removeEventListener('contextmenu', contextmenuCallback)
     })
   });
 
-  useEffect(() => {
-    renderCube(meta)
-  });
+  function generateMapClick(type) {
+    setBufferState(createCube(size, type))
+  }
  
   return (
       <canvas ref={canvas}></canvas>
@@ -65,13 +83,13 @@ function HexagonCanvas(props) {
 }
 
 function canvasClick(meta, clientX, clientY, action) {
-  const clickX = clientX - meta.geo.offsetX - meta.geo.w / 2
-  const clickY = clientY - meta.geo.offsetY
+  const rect = meta.canvasEle.getBoundingClientRect()
+  const clickX = clientX - rect.left - meta.geo.offsetX - meta.geo.w / 2
+  const clickY = clientY - rect.top - meta.geo.offsetY
 
   const coordXY = 2 * (clickX * meta.size.y) / meta.geo.w
   const coordZ = 2 * meta.size.z - 2 * ((clickY + (1 / Math.sqrt(3)) * clickX) * meta.size.z) / meta.geo.h
   const lightRayOut = lightRay(meta,coordXY,coordZ)
-  console.log(lightRayOut)
   if(lightRayOut) {
     if(action === 'build') {
       buildVoxel(meta, lightRayOut.point, lightRayOut.face)
@@ -83,8 +101,6 @@ function canvasClick(meta, clientX, clientY, action) {
 
 function lightRay(meta, coordXY, coordZ) {
   const triangle = mod(coordXY, 1) + mod(coordZ, 1) > 1 ? 1 : 0
-  console.log(coordXY, coordZ, triangle)
-
   let z = Math.floor(coordZ)
   let x = Math.floor(coordXY) //+ Math.min(0,z - meta.size.z)
   let y = 0//Math.min(0,z - meta.size.z)
@@ -120,6 +136,7 @@ function buildVoxel(meta, coords, face) {
   }
   if(meta.buffer.isInBounds(coords)) {
     meta.buffer.set(coords, 1)
+    meta.setBufferState(meta.buffer) // same object - does not trigger update
     renderCube(meta)
   }
 }
@@ -128,6 +145,7 @@ function removeVoxel(meta, coords) {
   if(meta.buffer.isInBounds(coords)) {
     meta.buffer.set(coords, 0)
     renderCube(meta)
+    meta.setBufferState(meta.buffer) // same object - does not trigger update
   }
 }
 
@@ -150,18 +168,11 @@ function createLayout({sizePx, size, height, width}) {
   return geos
 }
 
-function createCube(size) {
+function createCube(size, type = 'random') {
   const cube = new CubeMemory(size)
 
-  /*for(let i = 0; i < size.x; i++) {
-    for(let j = 0; j < size.y; j++) {
-      for(let k = 0; k < size.z; k++) {
-        cube.set({x: i,y: j,z: k}, k === 19 && i+j === 0 ? 0 : 1)
-      }
-    }
-  }*/
-
-  for(let x = size.x - 1; x >= 0; x--)
+  if(type === 'random') {
+    for(let x = size.x - 1; x >= 0; x--)
     {
         for(let y = size.y - 1; y >= 0; y--)
         {
@@ -176,27 +187,16 @@ function createCube(size) {
             }
         }
     }
+  } else {
+    for(let x = size.x - 1; x >= 0; x--)
+    {
+        for(let y = size.y - 1; y >= 0; y--)
+        {
+          cube.set({x,y,z: 0}, 1)
+        }
+    }
+  }
 
-  /*cube.heightMap = [
-      [0, 2, 2, 4, 4, 5, 5, 5, 5, 5],
-      [1, 3, 3, 4, 4, 5, 5, 5, 5, 5],
-      [1, 4, 4, 4, 4, 5, 5, 3, 5, 5],
-      [3, 4, 4, 5, 5, 5, 5, 5, 5, 5],
-      [3, 4, 5, 5, 6, 5, 5, 5, 5, 5],
-      [3, 4, 5, 5, 5, 5, 5, 5, 5, 5],
-      [3, 4, 5, 5, 5, 5, 5, 5, 5, 6],
-      [8, 4, 5, 5, 5, 5, 5, 5, 5, 7],
-      [3, 4, 5, 5, 5, 5, 5, 5, 5, 8],
-      [3, 4, 5, 5, 5, 5, 5, 5, 5, 9],
-  ]*/
-
-  /*cube.heightMap = [
-      [0, 2, 2, 4, 4],
-      [1, 3, 3, 4, 4],
-      [1, 4, 4, 4, 4],
-      [3, 4, 4, 5, 5],
-      [3, 4, 5, 5, 5],
-  ]*/
   return cube
 }
 
@@ -263,7 +263,7 @@ function drawRhombus(coords, face, color, meta) {
     ctx.lineTo( startX, startY - geo.j )
   }
   ctx.lineTo( startX, startY )
-  ctx.strokeStyle = 'black'//color
+  ctx.strokeStyle = meta.preferences.showOutlines ? 'black' : color
   ctx.lineWidth = 1
   ctx.fillStyle = color
   ctx.fill()
