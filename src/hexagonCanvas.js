@@ -20,7 +20,7 @@ function HexagonCanvas(props) {
   //const cubes = createLayout({sizePx, size, height, width}).map((geo) => { return { cube: createCube(size), geo }})
   const geo = createLayout({sizePx, size, height, width})[0]
 
-  const [buffer, setBufferState] = useState(createCube(size))
+  const [buffer, setBufferState] = useState(createCube(size, 'random', true))
 
   console.log(buffer)
   const meta = {
@@ -168,8 +168,12 @@ function createLayout({sizePx, size, height, width}) {
   return geos
 }
 
-function createCube(size, type = 'random') {
+function createCube(size, type = 'random',storage = false) {
   const cube = new CubeMemory(size)
+
+  if(storage && cube.loadFromStorage()) {
+    return cube
+  }
 
   if(type === 'random') {
     for(let x = size.x - 1; x >= 0; x--)

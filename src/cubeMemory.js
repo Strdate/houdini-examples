@@ -16,12 +16,27 @@ class CubeMemory
         if(!this.isInBounds({x, y, z}))
             throw new Error('Coord ' + x + ', ' + y + ', ' + z + ' is out of bounds')
         this.buffer[x * this.size.y * this.size.z + y * this.size.z + z] = val
+        this.saveToStorage()
     }
 
     isInBounds({x, y, z}) {
         if( x < 0 || x >= this.size.x || y < 0 || y >= this.size.y || z < 0 || z >= this.size.z)
             return false
         return true
+    }
+
+    loadFromStorage() {
+        const saved = window.localStorage.getItem('savedCube')
+        if(saved) {
+            this.buffer = Uint8Array.from(atob(saved).split('').map(function (c) { return c.charCodeAt(0); }))
+            return true
+        } else {
+            return false
+        }
+    }
+
+    saveToStorage() {
+        window.localStorage.setItem('savedCube',btoa(String.fromCharCode.apply(null, this.buffer)))
     }
 }
 
