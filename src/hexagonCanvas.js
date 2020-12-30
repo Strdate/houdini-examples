@@ -3,50 +3,50 @@ import React, { useRef, useEffect, useState } from 'react';
 import generateColor from './utils/generateGradient';
  
 function HexagonCanvas(props) {
-  console.log('renderig')
   const canvas = useRef();
   props.biRef.generateMapClick = generateMapClick;
 
-  const sizePx = 60
-  const size = {
+  const height = Math.max(600,window.innerHeight * 0.9)
+  const width = height * Math.sqrt(3) / 2 + 3
+  let size = {
+    x: 15,
+    y: 15,
+    z: 15
+  }
+  /*const requestedSize = {
     x: 10,
     y: 10,
     z: 10
-  }
+  }*/
 
-  const height = size.x * sizePx
-  const width = height * Math.sqrt(3) / 2 + 3
 
-  //const cubes = createLayout({sizePx, size, height, width}).map((geo) => { return { cube: createCube(size), geo }})
-  const geo = createLayout({sizePx, size, height, width})[0]
+  const [buffer, setBufferState] = useState(() => createCube(size, 'random', true))
+  size = buffer.size
 
-  const [buffer, setBufferState] = useState(createCube(size, 'random', true))
-
-  console.log(buffer)
-  const meta = {
-    size,
-    buffer,
-    setBufferState,
-    geo,
-    preferences: {
-      showOutlines: props.showOutlines
-    },
-    colorSpaces: {
-      /*right: 'chocolate', //generateColor('#C85A17','#893e10',size.x),
-      left: 'sandybrown', //generateColor('sandybrown','sandybrown',size.y),
-      bottom: 'tan' //generateColor('tan','tan',size.z)*/
-      right: generateColor('#e67733','#925f3f',size.x).reverse(),
-      left: generateColor('#E77471','#710515',size.y).reverse(),
-      bottom: generateColor('#fdea9b','#f2c202',size.z)
-    },
-    getColor: function(face, coord) {
-      return '#' + this.colorSpaces[face][coord]
-    }
-  }
+  const geo = createLayout({sizePx: height / size.x, size, height, width})[0]
 
   // initialize the canvas context
   useEffect(() => {
-    console.log('use effect!')
+    const meta = {
+      size,
+      buffer,
+      setBufferState,
+      geo,
+      preferences: {
+        showOutlines: props.showOutlines
+      },
+      colorSpaces: {
+        /*right: 'chocolate', //generateColor('#C85A17','#893e10',size.x),
+        left: 'sandybrown', //generateColor('sandybrown','sandybrown',size.y),
+        bottom: 'tan' //generateColor('tan','tan',size.z)*/
+        right: props.color.right.b ? generateColor(props.color.right.a, props.color.right.b,size.x).reverse() : props.color.right.a,
+        left: props.color.left.b ? generateColor(props.color.left.a, props.color.left.b,size.y).reverse() : props.color.left.a,
+        bottom: props.color.bottom.b ? generateColor(props.color.bottom.a, props.color.bottom.b,size.z): props.color.bottom.a
+      },
+      getColor: function(face, coord) {
+        return Array.isArray(this.colorSpaces[face]) ? '#' + this.colorSpaces[face][coord] : this.colorSpaces[face]
+      }
+    }
     // dynamically assign the width and height to canvas
     const canvasEle = canvas.current;
     canvasEle.width = width;
@@ -71,9 +71,11 @@ function HexagonCanvas(props) {
       canvasEle.removeEventListener('click', clickCallback)
       canvasEle.removeEventListener('contextmenu', contextmenuCallback)
     })
-  });
+  },[size, buffer, geo, props.showOutlines, props.color, width]);
 
-  function generateMapClick(type) {
+  function generateMapClick(type, requestedSize) {
+    const reqSize = parseInt(requestedSize)
+    size = {x: reqSize, y: reqSize, z: reqSize}
     setBufferState(createCube(size, type))
   }
  
@@ -146,6 +148,9 @@ function removeVoxel(meta, coords) {
     meta.buffer.set(coords, 0)
     renderCube(meta)
     meta.setBufferState(meta.buffer) // same object - does not trigger update
+    if(meta.buffer.cubeCount === 0) {
+      setTimeout(() => alert('Now the universe is empty'), 100)
+    }
   }
 }
 
@@ -169,12 +174,14 @@ function createLayout({sizePx, size, height, width}) {
 }
 
 function createCube(size, type = 'random',storage = false) {
-  const cube = new CubeMemory(size)
-
-  if(storage && cube.loadFromStorage()) {
-    return cube
+  if(storage) {
+    const cubeInMemory = CubeMemory.loadFromStorage()
+    if(cubeInMemory) {
+      return cubeInMemory
+    }
   }
-
+  const cube = new CubeMemory(size)
+  //console.log('create cube - size',size.x,size.y,size.z)
   if(type === 'random') {
     for(let x = size.x - 1; x >= 0; x--)
     {
@@ -184,7 +191,7 @@ function createCube(size, type = 'random',storage = false) {
             const rand = Math.round((Math.random() + factor) * size.z)
             for(let z = 0; z <= Math.min(rand,size.z - 1); z++) {
               if((cube.at({x: x+ 1,y,z}) ?? true) && (cube.at({x,y: y+1,z}) ?? true)) {
-                cube.set({x, y, z}, 1)
+                cube.set({x, y, z}, 1, false)
               } else {
                 break
               }
@@ -196,16 +203,15 @@ function createCube(size, type = 'random',storage = false) {
     {
         for(let y = size.y - 1; y >= 0; y--)
         {
-          cube.set({x,y,z: 0}, 1)
+          cube.set({x,y,z: 0}, 1, false)
         }
     }
   }
-
+  cube.saveToStorage()
   return cube
 }
 
 function renderCube(meta) {
-  //console.log('render cube',meta)
   meta.ctx.clearRect(0, 0, 2 * meta.geo.w, 2 * meta.geo.h)
   for(let i = meta.size.x + meta.size.y + meta.size.z; i >= 0; i--) {
     sameDistance(i,meta.size).forEach(point => {
@@ -272,6 +278,7 @@ function drawRhombus(coords, face, color, meta) {
   ctx.fillStyle = color
   ctx.fill()
   ctx.stroke();
+  ctx.closePath()
 }
 
 function mod(num,n) {

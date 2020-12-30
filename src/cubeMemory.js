@@ -4,6 +4,7 @@ class CubeMemory
     {
         this.size = {x, y, z}
         this.buffer = new Uint8Array(x * y * z)
+        this.cubeCount = 0
     }
 
     at({x, y, z}) {
@@ -12,11 +13,14 @@ class CubeMemory
         return this.buffer[x * this.size.y * this.size.z + y * this.size.z + z]
     }
 
-    set({x, y, z}, val) {
+    set({x, y, z}, val, saveToStorage = true) {
         if(!this.isInBounds({x, y, z}))
             throw new Error('Coord ' + x + ', ' + y + ', ' + z + ' is out of bounds')
         this.buffer[x * this.size.y * this.size.z + y * this.size.z + z] = val
-        this.saveToStorage()
+        this.cubeCount = val ? this.cubeCount + 1 : this.cubeCount - 1
+        if(saveToStorage) {
+            this.saveToStorage()
+        }
     }
 
     isInBounds({x, y, z}) {
@@ -25,18 +29,25 @@ class CubeMemory
         return true
     }
 
-    loadFromStorage() {
-        const saved = window.localStorage.getItem('savedCube')
-        if(saved) {
-            this.buffer = Uint8Array.from(atob(saved).split('').map(function (c) { return c.charCodeAt(0); }))
-            return true
-        } else {
-            return false
-        }
+    static loadFromStorage() {
+        try {
+            const obj = JSON.parse(window.localStorage.getItem('savedCube'))
+            if(obj) {
+                const cubeMemory = new CubeMemory({x: parseInt(obj.size.x), y: parseInt(obj.size.y), z: parseInt(obj.size.z)})
+                cubeMemory.buffer = Uint8Array.from(atob(obj.buffer).split('').map(function (c) { return c.charCodeAt(0); }))
+                cubeMemory.cubeCount = parseInt(obj.cubeCount)
+                return cubeMemory
+            }
+        } catch { }
     }
 
     saveToStorage() {
-        window.localStorage.setItem('savedCube',btoa(String.fromCharCode.apply(null, this.buffer)))
+        const obj = {
+            size: this.size,
+            cubeCount: this.cubeCount,
+            buffer: btoa(String.fromCharCode.apply(null, this.buffer))
+        }
+        window.localStorage.setItem('savedCube',JSON.stringify(obj))
     }
 }
 

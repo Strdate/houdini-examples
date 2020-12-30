@@ -64,9 +64,6 @@ registerPaint('hexagonal-tiling', class StaticGradient {
         {type: 'bottom', color: color1},
         {type: 'right', color: color2},
         {type: 'left', color: color3}
-        /*{type: 'bottom', color: '#ffff55'},
-        {type: 'right', color: '#ff5555'},
-        {type: 'left', color: '#808080'}*/
       ].forEach((face) => {
         for(let i = 0; i < cube.size; i++)
         {
