@@ -52,7 +52,7 @@ function Hexagons() {
             <a href='#' onClick={(e) => {e.preventDefault(); biRef.generateMapClick('flat', cubeSize)}}>Flat</a>
             Size: {cubeSize}
             <div className="slidecontainer">
-              <input type="range" min="1" max="40" value={cubeSize} onChange={(evt) => setcubeSize(parseInt(evt.target.value))} className="slider" step="1" id="cubeSize" />
+              <input type="range" min="1" max="80" value={cubeSize} onChange={(evt) => setcubeSize(parseInt(evt.target.value))} className="slider" step="1" id="cubeSize" />
             </div>
             <h1>Visual</h1>
             <input type="checkbox" id="chckOutlines" name="todo" value="show" checked={showOutlines} onChange={() => setShowOutlines(!showOutlines)}/>

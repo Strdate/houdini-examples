@@ -208,43 +208,26 @@ function createCube(size, type = 'random',storage = false) {
     }
   }
   cube.saveToStorage()
+  cube.computeVisibleFaces()
   return cube
 }
 
 function renderCube(meta) {
+  console.time('render')
   meta.ctx.clearRect(0, 0, 2 * meta.geo.w, 2 * meta.geo.h)
-  for(let i = meta.size.x + meta.size.y + meta.size.z; i >= 0; i--) {
-    sameDistance(i,meta.size).forEach(point => {
-      point = {x: point.x, y: point.y, z: meta.size.z - point.z - 1}
-      const val = meta.buffer.at(point)
-      if(val) {
-        if(!meta.buffer.at({x: point.x - 1, y: point.y, z: point.z})) {
-          drawRhombus(point, 'left', meta.getColor('left',point.x), meta)
-        }
-        if(!meta.buffer.at({x: point.x, y: point.y - 1, z: point.z})) {
-          drawRhombus(point, 'right', meta.getColor('right',point.y), meta)
-        }
-        if(!meta.buffer.at({x: point.x, y: point.y, z: point.z + 1})) {
-          drawRhombus({x: point.x, y: point.y,z: point.z + 1}, 'bottom', meta.getColor('bottom',point.z), meta)
-        }
-      }
-    });
-  }
-}
-
-function sameDistance(target, size) {
-  const array = []
-  for(let i = size.x - 1; i >= 0; i--) {
-    for(let j = size.y - 1; j >= 0; j--) {
-      for(let k = size.z - 1; k >= 0; k--) {
-        if(i + j + k === target) {
-          array.push({x: i, y: j, z: k})
-          break
-        }
-      }
+  
+  const faces = meta.buffer.visibleFaces
+  const length = faces.length / 4
+  for(let i = 0; i < length; i++) {
+    if(faces[4 * i + 3] === 1) {
+      drawRhombus({x: faces[4*i], y: faces[4*i + 1], z: faces[4*i + 2]}, 'left', meta.getColor('left',faces[4*i]), meta)
+    } else if(faces[4 * i + 3] === 2) {
+      drawRhombus({x: faces[4*i], y: faces[4*i + 1], z: faces[4*i + 2]}, 'right', meta.getColor('right',faces[4*i + 1]), meta)
+    } else {
+      drawRhombus({x: faces[4*i], y: faces[4*i + 1], z: faces[4*i + 2] + 1}, 'bottom', meta.getColor('bottom',faces[4*i + 2]), meta)
     }
   }
-  return array
+  console.timeEnd('render')
 }
 
 function drawRhombus(coords, face, color, meta) {
