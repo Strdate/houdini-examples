@@ -32,7 +32,7 @@ class CubeMemory
 
     computeVisibleFaces() {
         console.time('computeFaces')
-        const visibleFaces = new Uint8Array(4 * (this.size.x * this.size.y + this.size.x * this.size.z + this.size.y * this.size.z))
+        const visibleFaces = new Uint8Array(8 * (this.size.x * this.size.y + this.size.x * this.size.z + this.size.y * this.size.z))
         let visibleFacesCount = 0
         for(let i = this.size.x + this.size.y + this.size.z; i >= 0; i--) {
         this.sameDistance(i).forEach(point => {
@@ -82,8 +82,13 @@ class CubeMemory
             const obj = JSON.parse(window.localStorage.getItem('savedCube'))
             if(obj) {
                 const cubeMemory = new CubeMemory({x: parseInt(obj.size.x), y: parseInt(obj.size.y), z: parseInt(obj.size.z)})
-                cubeMemory.buffer = Uint8Array.from(atob(obj.buffer).split('').map(function (c) { return c.charCodeAt(0); }))
+                const dense = Uint8Array.from(atob(obj.buffer).split('').map(function (c) { return c.charCodeAt(0); }))
                 cubeMemory.cubeCount = parseInt(obj.cubeCount)
+                for(let i = 0; i < dense.length; i++) {
+                    for(let j = 0; j < 8; j++) {
+                        cubeMemory.buffer[8 * i + j] = dense[i] & Math.pow(2, j) ? 1 : 0
+                    }
+                }
                 cubeMemory.computeVisibleFaces()
                 return cubeMemory
             }
@@ -91,13 +96,22 @@ class CubeMemory
     }
 
     saveToStorage() {
-        if(this.size.x * this.size.y * this.size.z > 64000) {
-            return
+        const denseLength = Math.ceil(this.size.x * this.size.y * this.size.z / 8)
+        const dense = new Uint8Array(denseLength)
+        let densePointer = 0
+        let remainder = 0
+        for(let i = 0; i < this.size.x * this.size.y * this.size.z; i++) {
+            dense[densePointer] |= (this.buffer[i] ? Math.pow(2, remainder) : 0)
+            remainder++
+            if(remainder === 8) {
+                densePointer++
+                remainder = 0
+            }
         }
         const obj = {
             size: this.size,
             cubeCount: this.cubeCount,
-            buffer: btoa(String.fromCharCode.apply(null, this.buffer))
+            buffer: btoa(String.fromCharCode.apply(null, dense))
         }
         window.localStorage.setItem('savedCube',JSON.stringify(obj))
     }
