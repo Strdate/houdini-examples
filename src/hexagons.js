@@ -70,7 +70,11 @@ function Hexagons() {
               <option value="1">Arcade</option>
               <option value="3">RGB</option>
               <option value="7">RGB gradient</option>
-            </select>
+            </select><br />
+            <span className='smallText'>
+            <a href='#' download="cube.png" id='downloadLink' onClick={() => downloadPNG()}>Download PNG</a>
+            <a href='https://github.com/Strdate/houdini-examples' target='_blank'>Source code</a>
+            </span>
           </div>
         </div>
 
@@ -78,6 +82,11 @@ function Hexagons() {
     </header>
   </div>);
   }
+function downloadPNG(el) {
+  const canvas = document.getElementById('canvasMain')
+  const image = canvas.toDataURL('image/png')
+  document.getElementById('downloadLink').href = image;
+}
 
   /* Set the width of the sidebar to 250px (show it) */
 function openNav() {

@@ -78,24 +78,28 @@ class CubeMemory
     }
 
     static loadFromStorage() {
-        /*try {
+        try {
             const obj = JSON.parse(window.localStorage.getItem('savedCube'))
             if(obj) {
                 const cubeMemory = new CubeMemory({x: parseInt(obj.size.x), y: parseInt(obj.size.y), z: parseInt(obj.size.z)})
                 cubeMemory.buffer = Uint8Array.from(atob(obj.buffer).split('').map(function (c) { return c.charCodeAt(0); }))
                 cubeMemory.cubeCount = parseInt(obj.cubeCount)
+                cubeMemory.computeVisibleFaces()
                 return cubeMemory
             }
-        } catch { }*/
+        } catch { }
     }
 
     saveToStorage() {
-        /*const obj = {
+        if(this.size.x * this.size.y * this.size.z > 64000) {
+            return
+        }
+        const obj = {
             size: this.size,
             cubeCount: this.cubeCount,
             buffer: btoa(String.fromCharCode.apply(null, this.buffer))
         }
-        window.localStorage.setItem('savedCube',JSON.stringify(obj))*/
+        window.localStorage.setItem('savedCube',JSON.stringify(obj))
     }
 }
 

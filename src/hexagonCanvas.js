@@ -80,7 +80,7 @@ function HexagonCanvas(props) {
   }
  
   return (
-      <canvas ref={canvas}></canvas>
+      <canvas ref={canvas} id='canvasMain'></canvas>
   );
 }
 
