@@ -2,11 +2,11 @@ import React, { useRef, useState } from "react";
 import HexagonCanvas from "./hexagonCanvas";
 
 function Hexagons() {
-    const [showOutlines, setShowOutlines] = useState(false)
-    const [hideBackground, setHideBackground] = useState(false)
-    const [cubeSize, setcubeSize] = useState(15)
-    const [color, setColor] = useState(0)
-    const biRef = {}
+    let pref
+    try {
+      pref = JSON.parse(window.localStorage.getItem('cubePreferences'))
+    } catch {}
+    
 
     const colors = [
       {right: {a: '#e67733',b: '#925f3f'},
@@ -42,6 +42,14 @@ function Hexagons() {
       bottom: {a: '#0000ff', b: '#ffffff'}},
     ]
 
+    const [showOutlines, setShowOutlines] = useState(pref?.showOutlines ?? false)
+    const [hideBackground, setHideBackground] = useState(pref?.hideBackground ?? false)
+    const [cubeSize, setcubeSize] = useState((pref?.cubeSize > 0 && pref?.cubeSize <= 80) ? pref.cubeSize : 15 )
+    const [color, setColor] = useState(pref?.color >= 0 && pref?.color < colors.length ? pref.color : 0)
+    const biRef = {}
+
+    window.localStorage.setItem('cubePreferences',JSON.stringify({showOutlines, hideBackground, cubeSize, color}))
+
     return (<div className="Hexagon">
     <header className={hideBackground ? "Hexagon-header Hexagon-header-hideBackground" : "Hexagon-header Hexagon-header-showBackground"}>
         <HexagonCanvas fill={true} showOutlines={showOutlines} biRef={biRef} color={colors[color]}/>
@@ -61,7 +69,7 @@ function Hexagons() {
             <label htmlFor="chckBground">Hide background</label><br /><br />
             Color
             <div className="colorSelect">
-            <select onChange={(evt) => setColor(parseInt(evt.target.value))}>
+            <select value={color} onChange={(evt) => setColor(parseInt(evt.target.value))}>
               <option value="0">Red sand gradient</option>
               <option value="6">Oceanic gradient</option>
               <option value="4">Shaded grassland</option>
@@ -70,10 +78,10 @@ function Hexagons() {
               <option value="1">Arcade</option>
               <option value="3">RGB</option>
               <option value="7">RGB gradient</option>
-            </select><br />
+            </select><br /><br /><br /><br /><br /><br />
             <span className='smallText'>
             <a href='#' download="cube.png" id='downloadLink' onClick={() => downloadPNG()}>Download PNG</a>
-            <a href='https://github.com/Strdate/houdini-examples' target='_blank'>Source code</a>
+            <a href='https://github.com/Strdate/houdini-examples' target='_blank' rel='noopener'>Source code</a>
             </span>
           </div>
         </div>
