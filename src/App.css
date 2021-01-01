@@ -7,10 +7,6 @@
   pointer-events: none;
 }
 
-.Hexagon-header {
-  overflow: hidden;
-}
-
 .Hexagon-header-hideBackground {
   background: #ffffff;
 }
@@ -29,6 +25,8 @@
   --brick-tiling-visual-defects: false;
 
   min-height: 100vh;
+  min-width: min-content;
+
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -62,7 +60,7 @@
 
 /* The sidepanel menu */
 .sidepanel {
-  height: 600px; /* Specify a height */
+  height: min(600px, calc(100vh - 120px)); /* Specify a height */
   width: 400px; /* 0 width - change this with JavaScript */
   position: fixed; /* Stay in place */
   z-index: 1; /* Stay on top */

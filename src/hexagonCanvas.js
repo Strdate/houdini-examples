@@ -8,27 +8,28 @@ class HexagonCanvas extends Component {
     console.log('constructor')
     this.canvasElement = React.createRef()
 
-    this.state = {
+    /*this.state = {
       buffer: {},
       size: {},
       geo: {},
       meta: {}
-    }
+    }*/
   }
 
   static getDerivedStateFromProps(props, prevState) {
     console.log('get derived state from props')
 
-    let buffer = prevState.buffer
+    let buffer = prevState?.buffer
 
     let size = {
       x: 15,
       y: 15,
       z: 15
     }
-    const height = Math.max(300,window.innerHeight * 0.9)
+    const zoom = props.zoom
+    const height = zoom * Math.max(300,window.innerHeight * 0.9)
     const width = height * Math.sqrt(3) / 2 + 3
-    if(!prevState.buffer.size) {
+    if(!prevState?.buffer?.size) {
       buffer = createCube(size, 'random', true)
     }
     size = buffer.size
@@ -36,7 +37,15 @@ class HexagonCanvas extends Component {
     return {
       buffer,
       size,
-      geo: createLayout({sizePx: height / size.x, size, height, width, windowHeight: window.innerHeight, windowWidth: window.innerWidth})[0],
+      geo: {
+        i: (width - 3) / size.x,
+        j: height / (2 * size.x),
+        h: height,
+        w: (width - 3),
+        zoom,
+        offsetX: 0,
+        offsetY: 0,
+      }, 
       meta: {
         preferences: {
           showOutlines: props.showOutlines
@@ -56,6 +65,7 @@ class HexagonCanvas extends Component {
   shouldComponentUpdate(nextProps, nextState) {
     if(this.props.showOutlines === nextProps.showOutlines
       && this.props.color === nextProps.color
+      && this.props.zoom === nextProps.zoom
       && this.state.buffer === nextState.buffer) {
       return false
     }
@@ -247,24 +257,6 @@ class HexagonCanvas extends Component {
     ctx.stroke();
     ctx.closePath()
   }
-}
-
-function createLayout({sizePx, size, height, width, windowHeight, windowWidth}) {
-  function createGeo(offsetX, offsetY) {
-    geos.push({
-      i: (width - 3) / size.x,
-      j: height / (2 * size.x),
-      h: height,
-      w: (width - 3),
-      offsetX: offsetX,
-      offsetY: offsetY,
-    })
-  }
-  const geos = []
-  
-  //createGeo((windowWidth - width) / 2,(windowHeight - height) / 2)
-  createGeo(0,0)
-  return geos
 }
 
 function createCube(size, type = 'random',storage = false) {

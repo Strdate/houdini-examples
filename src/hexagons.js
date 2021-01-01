@@ -44,6 +44,7 @@ function Hexagons() {
     const [showOutlines, setShowOutlines] = useState(pref?.showOutlines ?? false)
     const [hideBackground, setHideBackground] = useState(pref?.hideBackground ?? false)
     const [cubeSize, setcubeSize] = useState((pref?.cubeSize > 0 && pref?.cubeSize <= 80) ? pref.cubeSize : 15 )
+    const [zoom, setZoom] = useState(1)
     const [color, setColor] = useState(pref?.color >= 0 && pref?.color < colors.length ? pref.color : 0)
     const hexagonCanvasRef = React.useRef()
 
@@ -51,7 +52,7 @@ function Hexagons() {
 
     return (<div className="Hexagon">
     <header className={hideBackground ? "Hexagon-header Hexagon-header-hideBackground" : "Hexagon-header Hexagon-header-showBackground"}>
-        <HexagonCanvas fill={true} showOutlines={showOutlines} ref={hexagonCanvasRef} color={colors[color]}/>
+        <HexagonCanvas fill={true} showOutlines={showOutlines} ref={hexagonCanvasRef} color={colors[color]} zoom={zoom}/>
         <div id="mySidepanel" className="sidepanel">
             <a href='#' className="closebtn" onClick={closeNav}>&times;</a>
             <h1>Generate map</h1>
@@ -77,7 +78,11 @@ function Hexagons() {
               <option value="1">Arcade</option>
               <option value="3">RGB</option>
               <option value="7">RGB gradient</option>
-            </select><br /><br /><br /><br /><br /><br />
+            </select><br /><br />Zoom: {zoom}x
+            <div className="slidecontainer">
+              <input type="range" min="0.5" max="5" value={zoom} onChange={(evt) => setZoom(Number(evt.target.value))} className="slider" step="0.5" id="zoom" />
+            </div>
+            <br /><br />
             <span className='smallText'>
             <a href='#' download="cube.png" id='downloadLink' onClick={() => downloadPNG()}>Download PNG</a>
             <a href='https://github.com/Strdate/houdini-examples' target='_blank' rel='noopener'>Source code</a>
