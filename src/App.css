@@ -148,7 +148,7 @@
 .slider {
   -webkit-appearance: none;
   width: 90%;
-  height: 15px;
+  height: 10px;
   border-radius: 5px;  
   background: #d3d3d3;
   outline: none;
@@ -166,8 +166,8 @@
 .slider::-webkit-slider-thumb {
   -webkit-appearance: none;
   appearance: none;
-  width: 25px;
-  height: 25px;
+  width: 20px;
+  height: 20px;
   border-radius: 50%; 
   background: #710515;
   cursor: pointer;

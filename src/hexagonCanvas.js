@@ -1,175 +1,269 @@
 import CubeMemory from './cubeMemory'
-import React, { useRef, useEffect, useState } from 'react';
+import React, { Component } from 'react';
 import generateColor from './utils/generateGradient';
  
-function HexagonCanvas(props) {
-  const canvas = useRef();
-  props.biRef.generateMapClick = generateMapClick;
+class HexagonCanvas extends Component {
+  constructor(props) {
+    super(props)
+    console.log('constructor')
+    this.canvasElement = React.createRef()
 
-  const height = Math.max(600,window.innerHeight * 0.9)
-  const width = height * Math.sqrt(3) / 2 + 3
-  let size = {
-    x: 15,
-    y: 15,
-    z: 15
+    this.state = {
+      buffer: {},
+      size: {},
+      geo: {},
+      meta: {}
+    }
   }
-  /*const requestedSize = {
-    x: 10,
-    y: 10,
-    z: 10
-  }*/
 
+  static getDerivedStateFromProps(props, prevState) {
+    console.log('get derived state from props')
 
-  const [buffer, setBufferState] = useState(() => createCube(size, 'random', true))
-  size = buffer.size
+    let buffer = prevState.buffer
 
-  const geo = createLayout({sizePx: height / size.x, size, height, width})[0]
-
-  // initialize the canvas context
-  useEffect(() => {
-    const meta = {
-      size,
+    let size = {
+      x: 15,
+      y: 15,
+      z: 15
+    }
+    const height = Math.max(300,window.innerHeight * 0.9)
+    const width = height * Math.sqrt(3) / 2 + 3
+    if(!prevState.buffer.size) {
+      buffer = createCube(size, 'random', true)
+    }
+    size = buffer.size
+    
+    return {
       buffer,
-      setBufferState,
-      geo,
-      preferences: {
-        showOutlines: props.showOutlines
-      },
-      colorSpaces: {
-        /*right: 'chocolate', //generateColor('#C85A17','#893e10',size.x),
-        left: 'sandybrown', //generateColor('sandybrown','sandybrown',size.y),
-        bottom: 'tan' //generateColor('tan','tan',size.z)*/
-        right: props.color.right.b ? generateColor(props.color.right.a, props.color.right.b,size.x).reverse() : props.color.right.a,
-        left: props.color.left.b ? generateColor(props.color.left.a, props.color.left.b,size.y).reverse() : props.color.left.a,
-        bottom: props.color.bottom.b ? generateColor(props.color.bottom.a, props.color.bottom.b,size.z): props.color.bottom.a
-      },
-      getColor: function(face, coord) {
-        return Array.isArray(this.colorSpaces[face]) ? '#' + this.colorSpaces[face][coord] : this.colorSpaces[face]
+      size,
+      geo: createLayout({sizePx: height / size.x, size, height, width, windowHeight: window.innerHeight, windowWidth: window.innerWidth})[0],
+      meta: {
+        preferences: {
+          showOutlines: props.showOutlines
+        },
+        colorSpaces: {
+          right: props.color.right.b ? generateColor(props.color.right.a, props.color.right.b,size.x).reverse() : props.color.right.a,
+          left: props.color.left.b ? generateColor(props.color.left.a, props.color.left.b,size.y).reverse() : props.color.left.a,
+          bottom: props.color.bottom.b ? generateColor(props.color.bottom.a, props.color.bottom.b,size.z): props.color.bottom.a
+        },
+        getColor: function(face, coord) {
+          return Array.isArray(this.colorSpaces[face]) ? '#' + this.colorSpaces[face][coord] : this.colorSpaces[face]
+        }
       }
     }
-    // dynamically assign the width and height to canvas
-    const canvasEle = canvas.current;
-    canvasEle.width = width;
-    canvasEle.height = height;
- 
-    // get context of the canvas
-    meta.ctx = canvasEle.getContext("2d");
-    meta.canvasEle = canvasEle
+  }
 
-    const clickCallback = function(evt) {
-      canvasClick(meta, evt.clientX, evt.clientY,'build')
+  shouldComponentUpdate(nextProps, nextState) {
+    if(this.props.showOutlines === nextProps.showOutlines
+      && this.props.color === nextProps.color
+      && this.state.buffer === nextState.buffer) {
+      return false
     }
-    canvasEle.addEventListener('click', clickCallback)
-    const contextmenuCallback = function(evt) {
-      evt.preventDefault()
-      canvasClick(meta, evt.clientX, evt.clientY,'remove')
-    }
-    canvasEle.addEventListener('contextmenu', contextmenuCallback)
+    return true
+  }
 
-    renderCube(meta)
-    return (() => {
-      canvasEle.removeEventListener('click', clickCallback)
-      canvasEle.removeEventListener('contextmenu', contextmenuCallback)
-    })
-  },[size, buffer, geo, props.showOutlines, props.color, width]);
+  componentDidMount() {
+    console.log('component did mount')
+    this.canvasElement.current.addEventListener('click', this.canvasLeftClick)
+    this.canvasElement.current.addEventListener('contextmenu', this.canvasRightClick)
+    window.addEventListener('resize', this.windowResizedEvent)
+    this.renderCanvas()
+  }
 
-  function generateMapClick(type, requestedSize) {
+  componentDidUpdate() {
+    console.log('component did update')
+    this.renderCanvas()
+  }
+
+  componentWillUnmount() {
+    this.canvasElement.current.removeEventListener('click', this.canvasLeftClick)
+    this.canvasElement.current.removeEventListener('contextmenu', this.canvasRightClick)
+    window.removeEventListener('resize', this.windowResizedEvent)
+    clearTimeout(this.windowResizedTimeout)
+  }
+
+  canvasLeftClick = (evt) => {
+    this.canvasClick(evt.clientX, evt.clientY,'build')
+  }
+
+  canvasRightClick = (evt) => {
+    evt.preventDefault()
+    this.canvasClick(evt.clientX, evt.clientY,'remove')
+  }
+
+  generateMapClick = (type, requestedSize) => {
     const reqSize = parseInt(requestedSize)
-    size = {x: reqSize, y: reqSize, z: reqSize}
-    setBufferState(createCube(size, type))
+    const size = {x: reqSize, y: reqSize, z: reqSize}
+    this.setState({
+      size,
+      buffer: createCube(size, type)
+    })
   }
- 
-  return (
-      <canvas ref={canvas} id='canvasMain'></canvas>
-  );
-}
 
-function canvasClick(meta, clientX, clientY, action) {
-  const rect = meta.canvasEle.getBoundingClientRect()
-  const clickX = clientX - rect.left - meta.geo.offsetX - meta.geo.w / 2
-  const clickY = clientY - rect.top - meta.geo.offsetY
+  windowResizedEvent = (evt) => {
+    clearTimeout(this.windowResizedTimeout)
+    this.windowResizedTimeout = setTimeout(this.windowResizedDelayed, 100)
+  }
 
-  const coordXY = 2 * (clickX * meta.size.y) / meta.geo.w
-  const coordZ = 2 * meta.size.z - 2 * ((clickY + (1 / Math.sqrt(3)) * clickX) * meta.size.z) / meta.geo.h
-  const lightRayOut = lightRay(meta,coordXY,coordZ)
-  if(lightRayOut) {
-    if(action === 'build') {
-      buildVoxel(meta, lightRayOut.point, lightRayOut.face)
-    } else if(action === 'remove') {
-      removeVoxel(meta, lightRayOut.point)
+  windowResizedDelayed = () => {
+    this.forceUpdate()
+  }
+
+  // Section: Building / removing voxels
+
+  canvasClick = (clientX, clientY, action) => {
+    const rect = this.canvasElement.current.getBoundingClientRect()
+    const clickX = clientX - rect.left - this.state.geo.offsetX - this.state.geo.w / 2
+    const clickY = clientY - rect.top - this.state.geo.offsetY
+  
+    const coordXY = 2 * (clickX * this.state.size.y) / this.state.geo.w
+    const coordZ = 2 * this.state.size.z - 2 * ((clickY + (1 / Math.sqrt(3)) * clickX) * this.state.size.z) / this.state.geo.h
+    const lightRayOut = this.lightRay(coordXY,coordZ)
+    if(lightRayOut) {
+      if(action === 'build') {
+        this.buildVoxel(lightRayOut.point, lightRayOut.face)
+      } else if(action === 'remove') {
+        this.removeVoxel(lightRayOut.point)
+      }
     }
   }
-}
-
-function lightRay(meta, coordXY, coordZ) {
-  const triangle = mod(coordXY, 1) + mod(coordZ, 1) > 1 ? 1 : 0
-  let z = Math.floor(coordZ)
-  let x = Math.floor(coordXY) //+ Math.min(0,z - meta.size.z)
-  let y = 0//Math.min(0,z - meta.size.z)
-  //z = Math.min(meta.size.z, z)
-
-  while(meta.size.z >= 0 && x < meta.size.x && y < meta.size.y) {
-    if(meta.buffer.at({x, y, z})) {
-      return {point: {x, y, z}, face: 'right'}
-    } else if(triangle && meta.buffer.at({x: x + 1, y, z})) {
-      return {point: {x: x+1, y, z}, face: 'left'}
-    } else if(triangle && meta.buffer.at({x: x + 1, y, z: z - 1})) {
-      return {point: {x: x + 1, y, z: z - 1}, face: 'bottom'}
-    } else if(!triangle && meta.buffer.at({x, y, z: z - 1})) {
-      return {point: {x, y, z: z - 1}, face: 'bottom'}
-    } else if(!triangle && meta.buffer.at({x: x + 1, y, z: z - 1})) {
-      return {point: {x: x + 1, y, z: z - 1}, face: 'left'}
-    }
-    x++
-    y++
-    z--
-  }
-}
-
-function buildVoxel(meta, coords, face) {
-  switch(face) {
-    case 'right': coords = {x: coords.x, y: coords.y - 1, z: coords.z}
-      break
-    case 'left': coords = {x: coords.x - 1, y: coords.y, z: coords.z}
-      break
-    case 'bottom': coords = {x: coords.x, y: coords.y, z: coords.z + 1}
-      break
-    default: throw new Error('Unknown face')
-  }
-  if(meta.buffer.isInBounds(coords)) {
-    meta.buffer.set(coords, 1)
-    meta.setBufferState(meta.buffer) // same object - does not trigger update
-    renderCube(meta)
-  }
-}
-
-function removeVoxel(meta, coords) {
-  if(meta.buffer.isInBounds(coords)) {
-    meta.buffer.set(coords, 0)
-    renderCube(meta)
-    meta.setBufferState(meta.buffer) // same object - does not trigger update
-    if(meta.buffer.cubeCount === 0) {
-      setTimeout(() => alert('Now the universe is empty'), 100)
+  
+  lightRay = (coordXY, coordZ) => {
+    const meta = this.state
+    const triangle = mod(coordXY, 1) + mod(coordZ, 1) > 1 ? 1 : 0
+    let z = Math.floor(coordZ)
+    let x = Math.floor(coordXY) //+ Math.min(0,z - meta.size.z)
+    let y = 0//Math.min(0,z - meta.size.z)
+    //z = Math.min(meta.size.z, z)
+  
+    while(meta.size.z >= 0 && x < meta.size.x && y < meta.size.y) {
+      if(meta.buffer.at({x, y, z})) {
+        return {point: {x, y, z}, face: 'right'}
+      } else if(triangle && meta.buffer.at({x: x + 1, y, z})) {
+        return {point: {x: x+1, y, z}, face: 'left'}
+      } else if(triangle && meta.buffer.at({x: x + 1, y, z: z - 1})) {
+        return {point: {x: x + 1, y, z: z - 1}, face: 'bottom'}
+      } else if(!triangle && meta.buffer.at({x, y, z: z - 1})) {
+        return {point: {x, y, z: z - 1}, face: 'bottom'}
+      } else if(!triangle && meta.buffer.at({x: x + 1, y, z: z - 1})) {
+        return {point: {x: x + 1, y, z: z - 1}, face: 'left'}
+      }
+      x++
+      y++
+      z--
     }
   }
+  
+  buildVoxel = (coords, face) => {
+    const meta = this.state
+    switch(face) {
+      case 'right': coords = {x: coords.x, y: coords.y - 1, z: coords.z}
+        break
+      case 'left': coords = {x: coords.x - 1, y: coords.y, z: coords.z}
+        break
+      case 'bottom': coords = {x: coords.x, y: coords.y, z: coords.z + 1}
+        break
+      default: throw new Error('Unknown face')
+    }
+    if(meta.buffer.isInBounds(coords)) {
+      meta.buffer.set(coords, 1)
+      this.renderCanvas()
+    }
+  }
+  
+  removeVoxel = (coords) => {
+    const meta = this.state
+    if(meta.buffer.isInBounds(coords)) {
+      meta.buffer.set(coords, 0)
+      this.renderCanvas()
+      if(meta.buffer.cubeCount === 0) {
+        setTimeout(() => alert('Now the universe is empty'), 100)
+      }
+    }
+  }
+
+  // Section: Rendering
+
+  renderCanvas = () => {
+    console.time('render')
+    this.canvasElement.current.width = this.state.geo.w;
+    this.canvasElement.current.height = this.state.geo.h;
+    const ctx = this.canvasElement.current.getContext('2d')
+    ctx.clearRect(0, 0, 2 * this.state.geo.w, 2 * this.state.geo.h)
+    
+    const faces = this.state.buffer.visibleFaces
+    const length = faces.length / 4
+    for(let i = 0; i < length; i++) {
+      if(faces[4 * i + 3] === 1) {
+        this.drawRhombus(ctx, {x: faces[4*i], y: faces[4*i + 1], z: faces[4*i + 2]}, 'left')
+      } else if(faces[4 * i + 3] === 2) {
+        this.drawRhombus(ctx, {x: faces[4*i], y: faces[4*i + 1], z: faces[4*i + 2]}, 'right')
+      } else {
+        this.drawRhombus(ctx, {x: faces[4*i], y: faces[4*i + 1], z: faces[4*i + 2] + 1}, 'bottom')
+      }
+    }
+    console.timeEnd('render')
+  }
+
+  render() {
+    console.log('react render')
+
+    return (
+      <canvas ref={this.canvasElement} id='canvasMain'></canvas>
+    );
+  }
+
+  drawRhombus = (ctx, coords, face) => {
+    const color = this.state.meta.getColor(face, face === 'left' ? coords.x : (face === 'right' ? coords.y : coords.z - 1))
+    const geo = this.state.geo
+    if(coords.x === null || coords.y === null || coords.z === null)
+      return
+    const startX = geo.offsetX + geo.w / 2 + (coords.x - coords.y) * geo.i / 2
+    const startY = geo.offsetY + geo.h - (coords.x + coords.y + 2 * coords.z) * geo.j / 2
+    ctx.beginPath()
+    ctx.moveTo( startX, startY )
+    //ctx.lineTo = (x, y) => console.log(x, y)
+    if(face === 'bottom') // bottom face
+    {
+      ctx.lineTo( startX + geo.i / 2, startY - geo.j / 2 )
+      ctx.lineTo( startX, startY - geo.j )
+      ctx.lineTo( startX - geo.i / 2, startY - geo.j / 2 )
+    } else if(face === 'right') // right face
+    {
+      ctx.lineTo( startX + geo.i / 2, startY - geo.j / 2 )
+      ctx.lineTo( startX + geo.i / 2, startY - 3 * geo.j / 2 )
+      ctx.lineTo( startX, startY - geo.j )
+    } else if (face === 'left') // left face
+    {
+      ctx.lineTo( startX - geo.i / 2, startY - geo.j / 2 )
+      ctx.lineTo( startX - geo.i / 2, startY - 3 * geo.j / 2 )
+      ctx.lineTo( startX, startY - geo.j )
+    }
+    ctx.lineTo( startX, startY )
+    ctx.strokeStyle = this.state.meta.preferences.showOutlines ? 'black' : color
+    ctx.lineWidth = 1
+    ctx.fillStyle = color
+    ctx.fill()
+    ctx.stroke();
+    ctx.closePath()
+  }
 }
 
-function createLayout({sizePx, size, height, width}) {
+function createLayout({sizePx, size, height, width, windowHeight, windowWidth}) {
   function createGeo(offsetX, offsetY) {
     geos.push({
-      i: hexWidth / size.x,
-      j: hexHeight / (2 * size.x),
-      h: hexHeight,
-      w: hexWidth,
+      i: (width - 3) / size.x,
+      j: height / (2 * size.x),
+      h: height,
+      w: (width - 3),
       offsetX: offsetX,
       offsetY: offsetY,
     })
   }
   const geos = []
   
-  const hexHeight = size.x * sizePx
-  const hexWidth = hexHeight * Math.sqrt(3) / 2
-  createGeo((width - hexWidth) / 2,(height - hexHeight) / 2)
+  //createGeo((windowWidth - width) / 2,(windowHeight - height) / 2)
+  createGeo(0,0)
   return geos
 }
 
@@ -210,58 +304,6 @@ function createCube(size, type = 'random',storage = false) {
   cube.saveToStorage()
   cube.computeVisibleFaces()
   return cube
-}
-
-function renderCube(meta) {
-  console.time('render')
-  meta.ctx.clearRect(0, 0, 2 * meta.geo.w, 2 * meta.geo.h)
-  
-  const faces = meta.buffer.visibleFaces
-  const length = faces.length / 4
-  for(let i = 0; i < length; i++) {
-    if(faces[4 * i + 3] === 1) {
-      drawRhombus({x: faces[4*i], y: faces[4*i + 1], z: faces[4*i + 2]}, 'left', meta.getColor('left',faces[4*i]), meta)
-    } else if(faces[4 * i + 3] === 2) {
-      drawRhombus({x: faces[4*i], y: faces[4*i + 1], z: faces[4*i + 2]}, 'right', meta.getColor('right',faces[4*i + 1]), meta)
-    } else {
-      drawRhombus({x: faces[4*i], y: faces[4*i + 1], z: faces[4*i + 2] + 1}, 'bottom', meta.getColor('bottom',faces[4*i + 2]), meta)
-    }
-  }
-  console.timeEnd('render')
-}
-
-function drawRhombus(coords, face, color, meta) {
-  const {ctx, geo} = meta
-  if(coords.x === null || coords.y === null || coords.z === null)
-    return
-  const startX = geo.offsetX + geo.w / 2 + (coords.x - coords.y) * geo.i / 2
-  const startY = geo.offsetY + geo.h - (coords.x + coords.y + 2 * coords.z) * geo.j / 2
-  ctx.beginPath()
-  ctx.moveTo( startX, startY )
-  //ctx.lineTo = (x, y) => console.log(x, y)
-  if(face === 'bottom') // bottom face
-  {
-    ctx.lineTo( startX + geo.i / 2, startY - geo.j / 2 )
-    ctx.lineTo( startX, startY - geo.j )
-    ctx.lineTo( startX - geo.i / 2, startY - geo.j / 2 )
-  } else if(face === 'right') // right face
-  {
-    ctx.lineTo( startX + geo.i / 2, startY - geo.j / 2 )
-    ctx.lineTo( startX + geo.i / 2, startY - 3 * geo.j / 2 )
-    ctx.lineTo( startX, startY - geo.j )
-  } else if (face === 'left') // left face
-  {
-    ctx.lineTo( startX - geo.i / 2, startY - geo.j / 2 )
-    ctx.lineTo( startX - geo.i / 2, startY - 3 * geo.j / 2 )
-    ctx.lineTo( startX, startY - geo.j )
-  }
-  ctx.lineTo( startX, startY )
-  ctx.strokeStyle = meta.preferences.showOutlines ? 'black' : color
-  ctx.lineWidth = 1
-  ctx.fillStyle = color
-  ctx.fill()
-  ctx.stroke();
-  ctx.closePath()
 }
 
 function mod(num,n) {

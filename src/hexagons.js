@@ -1,63 +1,62 @@
 import React, { useRef, useState } from "react";
 import HexagonCanvas from "./hexagonCanvas";
 
+const colors = [
+  {right: {a: '#e67733',b: '#925f3f'},
+  left: {a: '#E77471',b: '#710515'},
+  bottom: {a: '#fdea9b',b: '#f2c202'}},
+  
+  {right: {a: '#ffff55'},
+  left: {a: '#ff5555'},
+  bottom: {a: '#808080'}},
+  
+  {right: {a: '#0fb8eb'},
+  left: {a: '#cccbce'},
+  bottom: {a: '#eb8532'}},
+
+  {right: {a: '#ff0000'},
+  left: {a: '#00ff00'},
+  bottom: {a: '#0000ff'}},
+
+  {right: {a: '#171a1c'},
+  left: {a: '#afbfdc'},
+  bottom: {a: '#4e873d'}},
+
+  {right: {a: '#e1dd72'},
+  left: {a: '#a8c66c'},
+  bottom: {a: '#1b6535'}},
+
+  {right: {a: '#6d6ddf', b: '#191970'},
+  left: {a: '#09e1d6', b: '#04625d'},
+  bottom: {a: '#34c567', b: '#1b6535'}},
+
+  {right: {a: '#ff0000', b: '#ffffff'},
+  left: {a: '#00ff00', b: '#ffffff'},
+  bottom: {a: '#0000ff', b: '#ffffff'}},
+]
+
 function Hexagons() {
     let pref
     try {
       pref = JSON.parse(window.localStorage.getItem('cubePreferences'))
     } catch {}
-    
-
-    const colors = [
-      {right: {a: '#e67733',b: '#925f3f'},
-      left: {a: '#E77471',b: '#710515'},
-      bottom: {a: '#fdea9b',b: '#f2c202'}},
-      
-      {right: {a: '#ffff55'},
-      left: {a: '#ff5555'},
-      bottom: {a: '#808080'}},
-      
-      {right: {a: '#0fb8eb'},
-      left: {a: '#cccbce'},
-      bottom: {a: '#eb8532'}},
-    
-      {right: {a: '#ff0000'},
-      left: {a: '#00ff00'},
-      bottom: {a: '#0000ff'}},
-
-      {right: {a: '#171a1c'},
-      left: {a: '#afbfdc'},
-      bottom: {a: '#4e873d'}},
-
-      {right: {a: '#e1dd72'},
-      left: {a: '#a8c66c'},
-      bottom: {a: '#1b6535'}},
-
-      {right: {a: '#6d6ddf', b: '#191970'},
-      left: {a: '#09e1d6', b: '#04625d'},
-      bottom: {a: '#34c567', b: '#1b6535'}},
-
-      {right: {a: '#ff0000', b: '#ffffff'},
-      left: {a: '#00ff00', b: '#ffffff'},
-      bottom: {a: '#0000ff', b: '#ffffff'}},
-    ]
 
     const [showOutlines, setShowOutlines] = useState(pref?.showOutlines ?? false)
     const [hideBackground, setHideBackground] = useState(pref?.hideBackground ?? false)
     const [cubeSize, setcubeSize] = useState((pref?.cubeSize > 0 && pref?.cubeSize <= 80) ? pref.cubeSize : 15 )
     const [color, setColor] = useState(pref?.color >= 0 && pref?.color < colors.length ? pref.color : 0)
-    const biRef = {}
+    const hexagonCanvasRef = React.useRef()
 
     window.localStorage.setItem('cubePreferences',JSON.stringify({showOutlines, hideBackground, cubeSize, color}))
 
     return (<div className="Hexagon">
     <header className={hideBackground ? "Hexagon-header Hexagon-header-hideBackground" : "Hexagon-header Hexagon-header-showBackground"}>
-        <HexagonCanvas fill={true} showOutlines={showOutlines} biRef={biRef} color={colors[color]}/>
+        <HexagonCanvas fill={true} showOutlines={showOutlines} ref={hexagonCanvasRef} color={colors[color]}/>
         <div id="mySidepanel" className="sidepanel">
             <a href='#' className="closebtn" onClick={closeNav}>&times;</a>
             <h1>Generate map</h1>
-            <a href='#' onClick={(e) => {e.preventDefault(); biRef.generateMapClick('random', cubeSize)}}>Random</a>
-            <a href='#' onClick={(e) => {e.preventDefault(); biRef.generateMapClick('flat', cubeSize)}}>Flat</a>
+            <a href='#' onClick={(e) => {e.preventDefault(); hexagonCanvasRef.current.generateMapClick('random', cubeSize)}}>Random</a>
+            <a href='#' onClick={(e) => {e.preventDefault(); hexagonCanvasRef.current.generateMapClick('flat', cubeSize)}}>Flat</a>
             Size: {cubeSize}
             <div className="slidecontainer">
               <input type="range" min="1" max="80" value={cubeSize} onChange={(evt) => setcubeSize(parseInt(evt.target.value))} className="slider" step="1" id="cubeSize" />
