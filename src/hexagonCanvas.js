@@ -5,19 +5,19 @@ import generateColor from './utils/generateGradient';
 class HexagonCanvas extends Component {
   constructor(props) {
     super(props)
-    console.log('constructor')
+    //console.log('constructor')
     this.canvasElement = React.createRef()
 
-    /*this.state = {
+    this.state = {
       buffer: {},
       size: {},
       geo: {},
       meta: {}
-    }*/
+    }
   }
 
   static getDerivedStateFromProps(props, prevState) {
-    console.log('get derived state from props')
+    //console.log('get derived state from props')
 
     let buffer = prevState?.buffer
 
@@ -73,7 +73,7 @@ class HexagonCanvas extends Component {
   }
 
   componentDidMount() {
-    console.log('component did mount')
+    //console.log('component did mount')
     this.canvasElement.current.addEventListener('click', this.canvasLeftClick)
     this.canvasElement.current.addEventListener('contextmenu', this.canvasRightClick)
     window.addEventListener('resize', this.windowResizedEvent)
@@ -81,7 +81,7 @@ class HexagonCanvas extends Component {
   }
 
   componentDidUpdate() {
-    console.log('component did update')
+    //console.log('component did update')
     this.renderCanvas()
   }
 
@@ -216,7 +216,7 @@ class HexagonCanvas extends Component {
   }
 
   render() {
-    console.log('react render')
+    //console.log('react render')
 
     return (
       <canvas ref={this.canvasElement} id='canvasMain' className='Canvas-Main'></canvas>
