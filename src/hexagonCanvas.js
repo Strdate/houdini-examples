@@ -219,7 +219,7 @@ class HexagonCanvas extends Component {
     console.log('react render')
 
     return (
-      <canvas ref={this.canvasElement} id='anvasMain' className='Canvas-Main'></canvas>
+      <canvas ref={this.canvasElement} id='canvasMain' className='Canvas-Main'></canvas>
     );
   }
 
