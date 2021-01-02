@@ -85,6 +85,7 @@ function Hexagons() {
             <br /><br />
             <span className='smallText'>
             <a href='#' download="cube.png" id='downloadLink' onClick={() => downloadPNG()}>Download PNG</a>
+            <a href='/backgrounds' target='_blank' rel='noopener'>Background generator</a>
             <a href='https://github.com/Strdate/houdini-examples' target='_blank' rel='noopener'>Source code</a>
             </span>
           </div>
