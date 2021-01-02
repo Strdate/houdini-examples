@@ -43,7 +43,15 @@
   --brick-tiling-stroke-color: black;
   --brick-tiling-rotation-ratio: 0.5;
   --brick-tiling-visual-defects: false;
-
+  --hexagonal-tiling-size: 40;
+  --hexagonal-tiling-side-length: 10;
+  --hexagonal-tiling-fill-screen: enabled;
+  --hexagonal-tiling-color-1: tan;
+  --hexagonal-tiling-color-2: chocolate;
+  --hexagonal-tiling-color-3: sandybrown;
+  --hexagonal-tiling-stroke-width: 0;
+  --hexagonal-tiling-stroke-color: black;
+  --hexagonal-tiling-flat-surfaces-ratio: 0.7;
   background: paint(hexagonal-tiling), sandybrown;
   min-height: 100vh;
   display: flex;
