@@ -58,6 +58,10 @@
   color: #61dafb;
 }
 
+.Canvas-Main {
+  cursor: pointer;
+}
+
 /* The sidepanel menu */
 .sidepanel {
   height: min(600px, calc(100vh - 120px)); /* Specify a height */
