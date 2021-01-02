@@ -41,7 +41,7 @@ function Hexagons() {
       pref = JSON.parse(window.localStorage.getItem('cubePreferences'))
     } catch {}
 
-    const [showOutlines, setShowOutlines] = useState(pref?.showOutlines ?? false)
+    const [showOutlines, setShowOutlines] = useState(pref?.showOutlines ?? true)
     const [hideBackground, setHideBackground] = useState(pref?.hideBackground ?? false)
     const [cubeSize, setcubeSize] = useState((pref?.cubeSize > 0 && pref?.cubeSize <= 80) ? pref.cubeSize : 15 )
     const [zoom, setZoom] = useState(1)
