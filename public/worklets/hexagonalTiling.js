@@ -108,7 +108,7 @@ registerPaint('hexagonal-tiling', class StaticGradient {
   
     function getHexagonsInRow(startHex, sign = 1) {
       let j = sign === 1 ? 0 : 1
-      while(fillScreen === 'enabled' || j === 0) {
+      while(fillScreen === 'enabled' || fillScreen === 'true' || j === 0) {
         const newHex = {x: startHex.x + j * hexWidth, y: startHex.y}
         if(isVisible(newHex))
         {
@@ -125,7 +125,7 @@ registerPaint('hexagonal-tiling', class StaticGradient {
     function loopRows(defPointX, defPointY, sign = 1) {
       let i = sign === 1 ? 0 : 1
       let generating = true
-      while(generating && (fillScreen === 'enabled' || i === 0)) {
+      while(generating && (fillScreen === 'enabled' || fillScreen === 'true' || i === 0)) {
         if(i % 2 === 0)
         {
           const lastHex = {x: defPointX, y: defPointY + i * (hexHeight) * 3 / 4 * sign}
