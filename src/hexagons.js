@@ -53,14 +53,14 @@ function Hexagons() {
     return (<div className="Hexagon">
     <header className={hideBackground ? "Hexagon-header Hexagon-header-hideBackground" : "Hexagon-header Hexagon-header-showBackground"}>
         <HexagonCanvas fill={true} showOutlines={showOutlines} ref={hexagonCanvasRef} color={colors[color]} zoom={zoom}/>
-        <div id="mySidepanel" className="sidepanel">
+        <div id="mySidepanel" className="sidepanel general-sidepanel">
             <a href='#' className="closebtn" onClick={closeNav}>&times;</a>
             <h1>Generate map</h1>
             <a href='#' onClick={(e) => {e.preventDefault(); hexagonCanvasRef.current.generateMapClick('random', cubeSize)}}>Random</a>
             <a href='#' onClick={(e) => {e.preventDefault(); hexagonCanvasRef.current.generateMapClick('flat', cubeSize)}}>Flat</a>
             Size: {cubeSize}
             <div className="slidecontainer">
-              <input type="range" min="1" max="80" value={cubeSize} onChange={(evt) => setcubeSize(parseInt(evt.target.value))} className="slider" step="1" id="cubeSize" />
+              <input type="range" min="1" max="80" value={cubeSize} onChange={(evt) => setcubeSize(parseInt(evt.target.value))} className="slider redThumb" step="1" id="cubeSize" />
             </div>
             <h1>Visual</h1>
             <input type="checkbox" id="chckOutlines" name="todo" value="show" checked={showOutlines} onChange={() => setShowOutlines(!showOutlines)}/>
@@ -80,7 +80,7 @@ function Hexagons() {
               <option value="7">RGB gradient</option>
             </select><br /><br />Zoom: {zoom}x
             <div className="slidecontainer">
-              <input type="range" min="0.5" max="5" value={zoom} onChange={(evt) => setZoom(Number(evt.target.value))} className="slider" step="0.5" id="zoom" />
+              <input type="range" min="0.5" max="5" value={zoom} onChange={(evt) => setZoom(Number(evt.target.value))} className="slider redThumb" step="0.5" id="zoom" />
             </div>
             <br /><br />
             <span className='smallText'>

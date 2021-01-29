@@ -35,7 +35,7 @@
   color: white;
 }
 
-.App-header {
+.Bgg-header {
   --brick-tiling-size: medium;
   --brick-tiling-color-horizontal: chocolate;
   --brick-tiling-color-vertical: sandybrown;
@@ -52,7 +52,7 @@
   --hexagonal-tiling-stroke-width: 0;
   --hexagonal-tiling-stroke-color: black;
   --hexagonal-tiling-flat-surfaces-ratio: 0.7;
-  background: paint(hexagonal-tiling), sandybrown;
+  background: paint(hexagonal-tiling), white;
   min-height: 100vh;
   display: flex;
   flex-direction: column;
@@ -112,7 +112,7 @@
   transition: 0.3s;
 }
 
-.sidepanel h1 {
+.general-sidepanel h1 {
   font-size: 30px
 }
 
@@ -179,8 +179,15 @@
   width: 20px;
   height: 20px;
   border-radius: 50%; 
-  background: #710515;
   cursor: pointer;
+}
+
+.redThumb::-webkit-slider-thumb {
+  background: #710515;
+}
+
+.whiteThumb::-webkit-slider-thumb {
+  background: grey;
 }
 
 .slider::-moz-range-thumb {
@@ -205,4 +212,42 @@
   font-size: 15px;
   color: white;
   border-color: white;
+}
+
+.whiteSelect option {
+  margin: 40px;
+  background: white;
+  color: black;
+  text-shadow: 0 1px 0 rgba(0, 0, 0, 0.4);
+  font-size: 15px;
+}
+
+.whiteSelect select {
+background-color: white;
+width: 150px;
+font-size: 15px;
+color: black;
+border-color: black;
+}
+
+/* Background generator - sidepanel menu */
+.bgg-sidepanel {
+  height: min(600px, calc(100vh - 120px)); /* Specify a height */
+  width: 400px; /* 0 width - change this with JavaScript */
+  position: fixed; /* Stay in place */
+  z-index: 1; /* Stay on top */
+  top: 48px;
+  right: 0;
+  opacity: 0.8;
+  border-radius: 5px 0px 0px 5px;
+  background-color: black; /* Black*/
+  overflow-x: hidden; /* Disable horizontal scroll */
+  text-align: center;
+  padding-top: 60px; /* Place content 60px from the top */
+  transition: 0.4s; /* 0.5 second transition effect to slide in the sidepanel */
+  font-size: 20px
+}
+
+.bgg-sidepanel > * {
+  margin: 4px 0;
 }

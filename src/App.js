@@ -6,6 +6,7 @@ import './App.css';
 import React from 'react';
 import { Route, BrowserRouter as Router, Switch } from 'react-router-dom';
 import Hexagons from './hexagons';
+import BackgroundGenerator from './backgroundGenerator';
 //import workletURL from 'file-loader!houdini-static-gradient';
 
 if(CSS.paintWorklet) {
@@ -17,19 +18,11 @@ function App() {
   return (
   <Router>
     <Switch>
-        <Route path="/backgrounds" component={Main} />
+        <Route path="/backgrounds" component={BackgroundGenerator} />
         <Route path="/" component={Hexagons} />
     </Switch>
   </Router>
   );
-}
-
-function Main() {
-  return (<div className="App">
-  <header className="App-header">
-
-  </header>
-</div>);
 }
 
 /*
